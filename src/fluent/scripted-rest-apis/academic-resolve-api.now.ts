@@ -1,8 +1,5 @@
 import '@servicenow/sdk/global'
-
-// Type declaration for RestApi builder
-declare function RestApi(config: any): any
-
+import { RestApi } from '@servicenow/sdk/core'
 import {
     createIncident,
     getIncident,
@@ -15,12 +12,14 @@ import {
 } from '../../server/academic-resolve-api.js'
 
 RestApi({
+    $id: Now.ID['academic_resolve_api'],
     name: 'Academic Resolve API',
     service_id: 'acadresolve',
     short_description: 'REST API for managing book incidents and dispute resolution',
     enforce_acl: [],
     routes: [
         {
+            $id: Now.ID['create_incident_route'],
             name: 'Create Incident',
             path: '/incidents',
             method: 'POST',
@@ -28,6 +27,7 @@ RestApi({
             short_description: 'Create a new book incident'
         },
         {
+            $id: Now.ID['get_incident_route'],
             name: 'Get Incident',
             path: '/incidents/{id}',
             method: 'GET',
@@ -35,6 +35,7 @@ RestApi({
             short_description: 'Get incident by ID'
         },
         {
+            $id: Now.ID['list_incidents_route'],
             name: 'List Incidents',
             path: '/incidents',
             method: 'GET',
@@ -42,6 +43,7 @@ RestApi({
             short_description: 'List incidents with optional filtering'
         },
         {
+            $id: Now.ID['update_incident_status_route'],
             name: 'Update Incident Status',
             path: '/incidents/status',
             method: 'PUT',
@@ -49,6 +51,7 @@ RestApi({
             short_description: 'Update incident status'
         },
         {
+            $id: Now.ID['calculate_fee_route'],
             name: 'Calculate Fee',
             path: '/fees/calculate',
             method: 'POST',
@@ -56,6 +59,7 @@ RestApi({
             short_description: 'Calculate fee based on damage type and level'
         },
         {
+            $id: Now.ID['initiate_payment_route'],
             name: 'Initiate Payment',
             path: '/payments/initiate',
             method: 'POST',
@@ -63,6 +67,7 @@ RestApi({
             short_description: 'Initiate payment process'
         },
         {
+            $id: Now.ID['submit_approval_route'],
             name: 'Submit for Approval',
             path: '/approvals/submit',
             method: 'POST',
@@ -70,6 +75,7 @@ RestApi({
             short_description: 'Submit incident for approval'
         },
         {
+            $id: Now.ID['ai_assessment_route'],
             name: 'AI Assessment',
             path: '/ai/assess',
             method: 'POST',

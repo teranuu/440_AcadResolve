@@ -1,14 +1,11 @@
 import '@servicenow/sdk/global'
-
-// Type declaration for UiPage builder
-declare function UiPage(config: any): any
-
-import incidentPage from '../../client/index.html'
+import { UiPage } from '@servicenow/sdk/core'
 
 UiPage({
+    $id: Now.ID['incident_manager_ui_page'],
     endpoint: 'x_1997678_acadreso_incident_manager.do',
     description: 'Incident Response Manager UI Page',
     category: 'general',
-    html: incidentPage,
+    html: Now.include('../../client/index.html'),
     direct: true,
 })

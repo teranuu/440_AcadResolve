@@ -1,12 +1,10 @@
 import '@servicenow/sdk/global'
-
-// Type declaration for BusinessRule builder
-declare function BusinessRule(config: any): any
-
+import { BusinessRule } from '@servicenow/sdk/core'
 import { calculateIncidentFee } from '../../server/fee-calculator.js'
 
 // Business rule to automatically calculate fees when incident is created or updated
 BusinessRule({
+    $id: Now.ID['calculate_fee_br'],
     name: 'Calculate Incident Fee',
     table: 'x_1997678_acadreso_book_incident',
     when: 'before',

@@ -1,14 +1,9 @@
 import '@servicenow/sdk/global'
-
-// Type declarations for fluent table builders
-declare function Table(config: any): any
-declare function StringColumn(config: any): any
-declare function DateTimeColumn(config: any): any
-declare function ChoiceColumn(config: any): any
-declare function ReferenceColumn(config: any): any
+import { Table, StringColumn, DateTimeColumn, ChoiceColumn, ReferenceColumn } from '@servicenow/sdk/core'
 
 // Approval Table - tracks approval requests for incidents
 export const x_1997678_acadreso_approval = Table({
+    $id: Now.ID['approval_table'],
     name: 'x_1997678_acadreso_approval',
     label: 'Incident Approval',
     schema: {

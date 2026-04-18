@@ -1,10 +1,9 @@
 import '@servicenow/sdk/global'
-
-// Type declaration for Record builder
-declare function Record(config: any): any
+import { Record } from '@servicenow/sdk/core'
 
 // Fee schedule records to define default fee calculations
 export const feeSchedule1 = Record({
+    $id: Now.ID['fee_schedule_1'],
     table: 'x_1997678_acadreso_fee_schedule',
     data: {
         damage_type: 'lost',
@@ -17,6 +16,7 @@ export const feeSchedule1 = Record({
 })
 
 export const feeSchedule2 = Record({
+    $id: Now.ID['fee_schedule_2'],
     table: 'x_1997678_acadreso_fee_schedule',
     data: {
         damage_type: 'damaged',
@@ -29,6 +29,7 @@ export const feeSchedule2 = Record({
 })
 
 export const feeSchedule3 = Record({
+    $id: Now.ID['fee_schedule_3'],
     table: 'x_1997678_acadreso_fee_schedule',
     data: {
         damage_type: 'damaged',
@@ -41,6 +42,7 @@ export const feeSchedule3 = Record({
 })
 
 export const feeSchedule4 = Record({
+    $id: Now.ID['fee_schedule_4'],
     table: 'x_1997678_acadreso_fee_schedule',
     data: {
         damage_type: 'damaged',
@@ -53,6 +55,7 @@ export const feeSchedule4 = Record({
 })
 
 export const feeSchedule5 = Record({
+    $id: Now.ID['fee_schedule_5'],
     table: 'x_1997678_acadreso_fee_schedule',
     data: {
         damage_type: 'torn_pages',
@@ -65,6 +68,7 @@ export const feeSchedule5 = Record({
 })
 
 export const feeSchedule6 = Record({
+    $id: Now.ID['fee_schedule_6'],
     table: 'x_1997678_acadreso_fee_schedule',
     data: {
         damage_type: 'water_damage',
@@ -77,6 +81,7 @@ export const feeSchedule6 = Record({
 })
 
 export const feeSchedule7 = Record({
+    $id: Now.ID['fee_schedule_7'],
     table: 'x_1997678_acadreso_fee_schedule',
     data: {
         damage_type: 'writing',
