@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export_set application="Academic Resolve" version="1.0.0">
+
+  <!-- USER ROLE 1: Admin -->
+  <user_role name="acad_resolve.admin">
+    <description>Academic Resolve Administrator - Full system access</description>
+    <permissions>
+      <permission table="x_1997678_acad_resolve_book_incident" operation="create">true</permission>
+      <permission table="x_1997678_acad_resolve_book_incident" operation="read">true</permission>
+      <permission table="x_1997678_acad_resolve_book_incident" operation="update">true</permission>
+      <permission table="x_1997678_acad_resolve_book_incident" operation="delete">true</permission>
+      
+      <permission table="x_1997678_acad_resolve_fee_schedule" operation="create">true</permission>
+      <permission table="x_1997678_acad_resolve_fee_schedule" operation="read">true</permission>
+      <permission table="x_1997678_acad_resolve_fee_schedule" operation="update">true</permission>
+      <permission table="x_1997678_acad_resolve_fee_schedule" operation="delete">true</permission>
+      
+      <permission table="x_1997678_acad_resolve_approval" operation="create">true</permission>
+      <permission table="x_1997678_acad_resolve_approval" operation="read">true</permission>
+      <permission table="x_1997678_acad_resolve_approval" operation="update">true</permission>
+      <permission table="x_1997678_acad_resolve_approval" operation="delete">true</permission>
+      
+      <permission resource="admin_ui" operation="access">true</permission>
+      <permission resource="integration_hub" operation="manage">true</permission>
+      <permission resource="flow_designer" operation="manage">true</permission>
+      <permission resource="notifications" operation="manage">true</permission>
+    </permissions>
+  </user_role>
+
+  <!-- USER ROLE 2: Library Staff -->
+  <user_role name="acad_resolve.library_staff">
+    <description>Academic Resolve Library Staff - Can review and manage incidents</description>
+    <permissions>
+      <permission table="x_1997678_acad_resolve_book_incident" operation="create">false</permission>
+      <permission table="x_1997678_acad_resolve_book_incident" operation="read">true</permission>
+      <permission table="x_1997678_acad_resolve_book_incident" operation="update">true</permission>
+      <permission table="x_1997678_acad_resolve_book_incident" operation="delete">false</permission>
+      
+      <permission field="x_1997678_acad_resolve_book_incident.approval_status" operation="write">true</permission>
+      <permission field="x_1997678_acad_resolve_book_incident.approver_notes" operation="write">true</permission>
+      <permission field="x_1997678_acad_resolve_book_incident.ai_assessment" operation="read">true</permission>
+      
+      <permission action="Send for Review" operation="execute">true</permission>
+      <permission action="Get AI Assessment" operation="execute">true</permission>
+      <permission action="Close Dispute" operation="execute">true</permission>
+      
+      <permission resource="service_portal" operation="access">true</permission>
+    </permissions>
+    <inherited_roles>
+      <role>basic</role>
+    </inherited_roles>
+  </user_role>
+
+  <!-- USER ROLE 3: Student -->
+  <user_role name="acad_resolve.student">
+    <description>Academic Resolve Student - Can create and view own incidents</description>
+    <permissions>
+      <permission table="x_1997678_acad_resolve_book_incident" operation="create">true</permission>
+      <permission table="x_1997678_acad_resolve_book_incident" operation="read">own</permission>
+      <permission table="x_1997678_acad_resolve_book_incident" operation="update">own</permission>
+      <permission table="x_1997678_acad_resolve_book_incident" operation="delete">false</permission>
+      
+      <permission field="x_1997678_acad_resolve_book_incident.student_id" operation="write">false</permission>
+      <permission field="x_1997678_acad_resolve_book_incident.approval_status" operation="read">true</permission>
+      <permission field="x_1997678_acad_resolve_book_incident.calculated_fee" operation="read">true</permission>
+      
+      <permission action="Create Payment Request" operation="execute">true</permission>
+      <permission action="View Status" operation="execute">true</permission>
+      
+      <permission resource="service_portal" operation="access">true</permission>
+    </permissions>
+    <inherited_roles>
+      <role>basic</role>
+    </inherited_roles>
+  </user_role>
+
+  <!-- USER ROLE 4: Approver/Manager -->
+  <user_role name="acad_resolve.approver">
+    <description>Academic Resolve Approver - Approves disputes and fees</description>
+    <permissions>
+      <permission table="x_1997678_acad_resolve_book_incident" operation="create">false</permission>
+      <permission table="x_1997678_acad_resolve_book_incident" operation="read">true</permission>
+      <permission table="x_1997678_acad_resolve_book_incident" operation="update">true</permission>
+      <permission table="x_1997678_acad_resolve_book_incident" operation="delete">false</permission>
+      
+      <permission table="x_1997678_acad_resolve_approval" operation="create">true</permission>
+      <permission table="x_1997678_acad_resolve_approval" operation="read">true</permission>
+      <permission table="x_1997678_acad_resolve_approval" operation="update">true</permission>
+      
+      <permission field="x_1997678_acad_resolve_book_incident.state" operation="write">true</permission>
+      <permission field="x_1997678_acad_resolve_book_incident.approval_status" operation="write">true</permission>
+      
+      <permission action="Approve Replacement" operation="execute">true</permission>
+      <permission action="Reject Dispute" operation="execute">true</permission>
+      <permission action="Send for Review" operation="execute">true</permission>
+      
+      <permission resource="service_portal" operation="access">true</permission>
+    </permissions>
+    <inherited_roles>
+      <role>basic</role>
+      <role>acad_resolve.library_staff</role>
+    </inherited_roles>
+  </user_role>
+
+  <!-- ACCESS CONTROL RULE 1: Students can only see their own incidents -->
+  <acl table="x_1997678_acad_resolve_book_incident" type="record" operation="read">
+    <condition>
+      <or>
+        <is_admin/>
+        <has_role>acad_resolve.library_staff</has_role>
+        <has_role>acad_resolve.approver</role>
+        <field_match field="student_id" user_field="sys_id"/>
+      </or>
+    </condition>
+    <allow>true</allow>
+  </acl>
+
+  <!-- ACCESS CONTROL RULE 2: Only admins can delete incidents -->
+  <acl table="x_1997678_acad_resolve_book_incident" type="record" operation="delete">
+    <condition>
+      <is_admin/>
+    </condition>
+    <allow>true</allow>
+  </acl>
+
+  <!-- ACCESS CONTROL RULE 3: Students can update only certain fields -->
+  <acl table="x_1997678_acad_resolve_book_incident" type="field" operation="write">
+    <field>description</field>
+    <condition>
+      <and>
+        <has_role>acad_resolve.student</has_role>
+        <field_match field="student_id" user_field="sys_id"/>
+        <field_match field="state" value="open"/>
+      </and>
+    </condition>
+    <allow>true</allow>
+  </acl>
+
+  <!-- ACCESS CONTROL RULE 4: Library staff can update approval fields -->
+  <acl table="x_1997678_acad_resolve_book_incident" type="field" operation="write">
+    <field>approval_status,approver_notes,ai_assessment</field>
+    <condition>
+      <has_role>acad_resolve.library_staff</has_role>
+    </condition>
+    <allow>true</allow>
+  </acl>
+
+  <!-- DATA POLICY 1: Automatic student_id assignment -->
+  <data_policy table="x_1997678_acad_resolve_book_incident" 
+               name="Auto-assign student ID" active="true">
+    <description>Automatically sets student_id to current user for new records</description>
+    <event>insert</event>
+    <script><![CDATA[
+if (!current.student_id) {
+  current.student_id = gs.getUser().getID();
+}
+    ]]></script>
+  </data_policy>
+
+  <!-- DATA POLICY 2: Automatic email assignment -->
+  <data_policy table="x_1997678_acad_resolve_book_incident" 
+               name="Populate student email" active="true">
+    <description>Gets and populates student email from user record</description>
+    <event>insert</event>
+    <script><![CDATA[
+var student = new GlideRecord('sys_user');
+if (student.get(current.student_id)) {
+  current.student_email = student.email;
+}
+    ]]></script>
+  </data_policy>
+
+  <!-- FIELD SECURITY: Sensitive Fields -->
+  <field_security table="x_1997678_acad_resolve_book_incident">
+    <field name="student_id" read_role="acad_resolve.admin,acad_resolve.library_staff" write_role="acad_resolve.admin"/>
+    <field name="calculated_fee" read_role="acad_resolve.admin,acad_resolve.library_staff,acad_resolve.student" write_role="acad_resolve.admin"/>
+    <field name="approval_status" read_role="acad_resolve.admin,acad_resolve.library_staff,acad_resolve.approver" write_role="acad_resolve.admin,acad_resolve.approver"/>
+    <field name="payment_gateway_id" read_role="acad_resolve.admin,acad_resolve.library_staff" write_role="acad_resolve.admin"/>
+  </field_security>
+
+</export_set>

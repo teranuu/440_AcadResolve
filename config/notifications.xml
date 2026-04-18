@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export_set application="Academic Resolve" version="1.0.0">
+
+  <!-- NOTIFICATION 1: Incident Created - To Library Staff -->
+  <notification name="Incident Created" table="x_1997678_acad_resolve_book_incident" 
+                 event="x_1997678_acad_resolve.incident_created">
+    <description>Notifies library staff when student creates incident report</description>
+    <active>true</active>
+    <recipients>
+      <role>acad_resolve.library_staff</role>
+      <role>acad_resolve.admin</role>
+    </recipients>
+    <template_subject>New Book Dispute Report: ${record.number} - ${record.book_title}</template_subject>
+    <template_body><![CDATA[
+Hello Library Staff,
+
+A new book dispute report has been filed:
+
+Incident Number: ${record.number}
+Date Created: ${record.sys_created_on}
+Student ID: ${record.student_id}
+
+Book Information:
+- Title: ${record.book_title}
+- ISBN: ${record.book_isbn}
+- Value: $${record.book_value}
+
+Damage Details:
+- Type: ${record.damage_type}
+- Level: ${record.damage_level}
+- Description: ${record.description}
+
+Incident Date: ${record.incident_date}
+
+Calculated Fee: $${record.calculated_fee}
+
+Action Required:
+1. Review the incident details
+2. If needed, request additional information from student
+3. Approve or reject the claim
+4. Process payment or replacement
+
+Please log in to the Academic Resolve system to review this incident:
+${record.getURL()}
+
+Best regards,
+Academic Book Dispute Resolution System
+    ]]></template_body>
+  </notification>
+
+  <!-- NOTIFICATION 2: Confirmation to Student -->
+  <notification name="Incident Confirmation" table="x_1997678_acad_resolve_book_incident" 
+                 event="x_1997678_acad_resolve.incident_created">
+    <description>Sends confirmation email to student after creating incident</description>
+    <active>true</active>
+    <recipients>
+      <field>student_email</field>
+    </recipients>
+    <template_subject>Your Book Dispute Report #${record.number} - Academic Library</template_subject>
+    <template_body><![CDATA[
+Dear Student,
+
+Thank you for submitting your book dispute report. We have received your claim and will review it promptly.
+
+Incident Details:
+- Report Number: ${record.number}
+- Book: ${record.book_title}
+- Damage Type: ${record.damage_type}
+- Calculated Fee: $${record.calculated_fee}
+
+Next Steps:
+1. Library staff will review your report within 2-3 business days
+2. You will receive a notification once a decision has been made
+3. If approved, you can pay the fee or arrange replacement online
+
+Track Your Claim:
+You can check the status of your dispute at any time using your report number: ${record.number}
+
+If you have any questions, please contact the Academic Library at library@acadresolve.edu
+
+Best regards,
+Academic Book Dispute Resolution System
+    ]]></template_body>
+  </notification>
+
+  <!-- NOTIFICATION 3: Approval Request to Reviewer -->
+  <notification name="Approval Requested" table="x_1997678_acad_resolve_book_incident" 
+                 event="x_1997678_acad_resolve.approval_requested">
+    <description>Sends approval request to designated reviewer/manager</description>
+    <active>true</active>
+    <recipients>
+      <role>acad_resolve.approver</role>
+    </recipients>
+    <template_subject>Approval Needed: Book Dispute #${record.number} - $${record.calculated_fee}</template_subject>
+    <template_body><![CDATA[
+Hello Manager,
+
+An incident requires your approval:
+
+Incident Number: ${record.number}
+Student: ${record.student_id}
+Book Title: ${record.book_title}
+Damage Level: ${record.damage_level}
+
+Requested Fee: $${record.calculated_fee}
+Justification: ${record.description}
+
+Library Staff Notes: ${record.approver_notes}
+
+Available Actions:
+1. Click "Approve" to authorize payment/replacement
+2. Click "Reject" to deny the claim
+3. Click "Request More Info" to ask for clarification
+
+Review and Decide:
+${record.getURL()}
+
+This request requires your attention within 24 hours.
+
+Best regards,
+Academic Book Dispute Resolution System
+    ]]></template_body>
+  </notification>
+
+  <!-- NOTIFICATION 4: Approval Decision - Approved -->
+  <notification name="Dispute Approved" table="x_1997678_acad_resolve_book_incident" 
+                 event="x_1997678_acad_resolve.replacement_approved">
+    <description>Notifies student that dispute has been approved</description>
+    <active>true</active>
+    <recipients>
+      <field>student_email</field>
+    </recipients>
+    <template_subject>Good News! Your Book Dispute #${record.number} Has Been Approved</template_subject>
+    <template_body><![CDATA[
+Dear Student,
+
+Great news! Your book dispute claim has been approved.
+
+Incident Number: ${record.number}
+Book: ${record.book_title}
+
+What Happens Next:
+- You have two options:
+  1. Pay the fee of $${record.calculated_fee} to close this claim
+  2. Request a replacement book from the library
+
+To Pay Online:
+Click here: [Payment Portal Link]
+Your payment will be processed securely.
+
+To Request Replacement:
+Contact the library at library@acadresolve.edu with your incident number.
+
+Important: Please complete your resolution within 14 days to finalize this case.
+
+Need Help?
+- Status Page: [Link to incident tracking]
+- Contact: library@acadresolve.edu
+
+Best regards,
+Academic Book Dispute Resolution System
+    ]]></template_body>
+  </notification>
+
+  <!-- NOTIFICATION 5: Dispute Rejected -->
+  <notification name="Dispute Rejected" table="x_1997678_acad_resolve_book_incident" 
+                 event="x_1997678_acad_resolve.dispute_rejected">
+    <description>Notifies student that dispute claim has been rejected</description>
+    <active>true</active>
+    <recipients>
+      <field>student_email</field>
+    </recipients>
+    <template_subject>Decision on Your Book Dispute #${record.number}</template_subject>
+    <template_body><![CDATA[
+Dear Student,
+
+We have reviewed your book dispute claim for Report #${record.number}.
+
+Decision: NOT APPROVED
+
+Reason: ${record.rejection_reason}
+
+Book Details:
+- Title: ${record.book_title}
+- Original Value: $${record.book_value}
+
+If You Disagree:
+You have 10 business days to appeal this decision by contacting:
+Academic Library Manager
+Email: manager@acadresolve.edu
+Phone: [Contact Number]
+
+To Appeal:
+Please include:
+1. Your incident number: ${record.number}
+2. Additional supporting evidence or information
+3. Explanation of why you believe this decision should be reconsidered
+
+Incident History:
+${record.getURL()}
+
+Best regards,
+Academic Book Dispute Resolution System
+    ]]></template_body>
+  </notification>
+
+  <!-- NOTIFICATION 6: Payment Received -->
+  <notification name="Payment Received" table="x_1997678_acad_resolve_book_incident" 
+                 event="x_1997678_acad_resolve.payment_received">
+    <description>Confirms payment received and case closed</description>
+    <active>true</active>
+    <recipients>
+      <field>student_email</field>
+      <role>acad_resolve.library_staff</role>
+    </recipients>
+    <template_subject>Payment Confirmed - Book Dispute #${record.number} Closed</template_subject>
+    <template_body><![CDATA[
+Payment Confirmation
+
+Incident #: ${record.number}
+Amount Paid: $${record.calculated_fee}
+Payment Date: ${record.sys_updated_on}
+Status: CLOSED
+
+Transaction Details:
+Book: ${record.book_title}
+Student: ${record.student_id}
+
+Your book dispute has been resolved and your account is now clear.
+
+A receipt has been emailed to your registered email address.
+
+Thank you for your prompt payment.
+
+Best regards,
+Academic Book Dispute Resolution System
+    ]]></template_body>
+  </notification>
+
+  <!-- NOTIFICATION 7: Replacement Completed -->
+  <notification name="Replacement Completed" table="x_1997678_acad_resolve_book_incident" 
+                 event="x_1997678_acad_resolve.replacement_completed">
+    <description>Notifies student that replacement book is ready for pickup</description>
+    <active>true</active>
+    <recipients>
+      <field>student_email</field>
+    </recipients>
+    <template_subject>Your Replacement Book is Ready - Incident #${record.number}</template_subject>
+    <template_body><![CDATA[
+Dear Student,
+
+Your replacement book is now ready for pickup!
+
+Incident Number: ${record.number}
+Original Book: ${record.book_title}
+Replacement Available: [Book Title/Details]
+
+Pickup Information:
+Location: Academic Library - Circulation Desk
+Hours: Monday-Friday 9am-6pm, Saturday 10am-4pm
+You must present your Student ID
+
+Please pick up your book within 14 days.
+
+Questions?
+Contact the library at library@acadresolve.edu or visit us in person.
+
+Best regards,
+Academic Book Dispute Resolution System
+    ]]></template_body>
+  </notification>
+
+  <!-- EMAIL INBOUND RULE: Process Email Disputes -->
+  <email_inbound_rule name="Process Email Dispute Submissions" 
+                       active="true" match_type="any">
+    <description>Automatically creates incidents from email submissions</description>
+    <match_condition>
+      <field>subject</field>
+      <contains>BOOK_DISPUTE</contains>
+    </match_condition>
+    <action>
+      <create_record table="x_1997678_acad_resolve_book_incident">
+        <field name="student_id">${email.from}</field>
+        <field name="description">${email.body}</field>
+        <field name="state">open</field>
+      </create_record>
+    </action>
+  </email_inbound_rule>
+
+</export_set>

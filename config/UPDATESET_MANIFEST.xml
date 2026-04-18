@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<update_set name="x_1997678_acad_resolve_updateset_v1" version="1.0.0">
+    <metadata>
+        <application>Academic Resolve - Book Dispute Resolution System</application>
+        <description>Lost/Damaged Book Dispute & Settlement Application for Educational Institutions</description>
+        <organization>Zurich Edition</organization>
+        <version>1.0.0</version>
+        <author>Academic Resolve Development Team</author>
+        <created_date>2024-01-15</created_date>
+        <scope>x-1997678-acad-resolve</scope>
+    </metadata>
+
+    <components>
+        <!-- Database Tables -->
+        <component type="table" name="x_1997678_acad_resolve_book_incident">
+            <file>config/database_schema.xml</file>
+            <description>Main incident table for book disputes</description>
+            <requires_restart>false</requires_restart>
+        </component>
+
+        <component type="table" name="x_1997678_acad_resolve_fee_schedule">
+            <file>config/database_schema.xml</file>
+            <description>Fee calculation reference table</description>
+            <requires_restart>false</requires_restart>
+        </component>
+
+        <component type="table" name="x_1997678_acad_resolve_approval">
+            <file>config/database_schema.xml</file>
+            <description>Approval workflow tracking table</description>
+            <requires_restart>false</requires_restart>
+        </component>
+
+        <!-- Business Rules -->
+        <component type="business_rule" name="Auto Calculate Fee">
+            <file>config/business_rules.xml</file>
+            <description>Automatically calculates incident fee based on damage type and level</description>
+            <execution_order>100</execution_order>
+        </component>
+
+        <component type="business_rule" name="Notify Library on Incident">
+            <file>config/business_rules.xml</file>
+            <description>Sends notification to library staff when new incident is created</description>
+            <execution_order>200</execution_order>
+        </component>
+
+        <component type="business_rule" name="Close Incident on Payment">
+            <file>config/business_rules.xml</file>
+            <description>Automatically closes incident when payment is recorded</description>
+            <execution_order>150</execution_order>
+        </component>
+
+        <component type="business_rule" name="Validate Incident Data">
+            <file>config/business_rules.xml</file>
+            <description>Validates required incident fields before saving</description>
+            <execution_order>50</execution_order>
+        </component>
+
+        <component type="business_rule" name="Set Priority by Damage">
+            <file>config/business_rules.xml</file>
+            <description>Sets incident priority based on damage level and book value</description>
+            <execution_order>75</execution_order>
+        </component>
+
+        <!-- Client Scripts -->
+        <component type="client_script" name="Validate Incident Form">
+            <file>config/client_scripts.xml</file>
+            <description>Validates form before submission to server</description>
+            <script_type>onSubmit</script_type>
+        </component>
+
+        <component type="client_script" name="Calculate Fee Preview">
+            <file>config/client_scripts.xml</file>
+            <description>Updates fee preview when damage level or book value changes</description>
+            <script_type>onChange</script_type>
+        </component>
+
+        <component type="client_script" name="Show/Hide Fields Based on Type">
+            <file>config/client_scripts.xml</file>
+            <description>Shows/hides relevant fields based on damage type selection</description>
+            <script_type>onChange</script_type>
+        </component>
+
+        <component type="client_script" name="Check User Permissions">
+            <file>config/client_scripts.xml</file>
+            <description>Checks user role and enables/disables fields accordingly</description>
+            <script_type>onLoad</script_type>
+        </component>
+
+        <component type="client_script" name="Handle Photo Upload">
+            <file>config/client_scripts.xml</file>
+            <description>Manages photo attachment uploads and validation</description>
+            <script_type>onLoad</script_type>
+        </component>
+
+        <!-- UI Actions -->
+        <component type="ui_action" name="Create Payment Request">
+            <file>config/ui_actions.xml</file>
+            <description>Initiates payment process for incident fee</description>
+            <display_role>acad_resolve.student,acad_resolve.admin</display_role>
+        </component>
+
+        <component type="ui_action" name="Approve Replacement">
+            <file>config/ui_actions.xml</file>
+            <description>Marks item as approved for replacement</description>
+            <display_role>acad_resolve.library_staff,acad_resolve.admin</display_role>
+        </component>
+
+        <component type="ui_action" name="Send for Review">
+            <file>config/ui_actions.xml</file>
+            <description>Escalates incident to library manager for review</description>
+            <display_role>acad_resolve.library_staff,acad_resolve.admin</display_role>
+        </component>
+
+        <component type="ui_action" name="Close Dispute">
+            <file>config/ui_actions.xml</file>
+            <description>Closes the dispute with final notes</description>
+            <display_role>acad_resolve.library_staff,acad_resolve.admin</display_role>
+        </component>
+
+        <component type="ui_action" name="Get AI Assessment">
+            <file>config/ui_actions.xml</file>
+            <description>Requests Copilot AI to assess the dispute</description>
+            <display_role>acad_resolve.admin,acad_resolve.library_staff</display_role>
+        </component>
+
+        <component type="ui_action" name="Reject Dispute">
+            <file>config/ui_actions.xml</file>
+            <description>Rejects the dispute claim with explanation</description>
+            <display_role>acad_resolve.approver,acad_resolve.admin</display_role>
+        </component>
+
+        <!-- Notifications -->
+        <component type="notification" name="Incident Created">
+            <file>config/notifications.xml</file>
+            <description>Notifies library staff when student creates incident report</description>
+            <event>x_1997678_acad_resolve.incident_created</event>
+        </component>
+
+        <component type="notification" name="Incident Confirmation">
+            <file>config/notifications.xml</file>
+            <description>Sends confirmation email to student after creating incident</description>
+            <event>x_1997678_acad_resolve.incident_created</event>
+        </component>
+
+        <component type="notification" name="Approval Requested">
+            <file>config/notifications.xml</file>
+            <description>Sends approval request to designated reviewer/manager</description>
+            <event>x_1997678_acad_resolve.approval_requested</event>
+        </component>
+
+        <component type="notification" name="Dispute Approved">
+            <file>config/notifications.xml</file>
+            <description>Notifies student that dispute has been approved</description>
+            <event>x_1997678_acad_resolve.replacement_approved</event>
+        </component>
+
+        <component type="notification" name="Dispute Rejected">
+            <file>config/notifications.xml</file>
+            <description>Notifies student that dispute claim has been rejected</description>
+            <event>x_1997678_acad_resolve.dispute_rejected</event>
+        </component>
+
+        <component type="notification" name="Payment Received">
+            <file>config/notifications.xml</file>
+            <description>Confirms payment received and case closed</description>
+            <event>x_1997678_acad_resolve.payment_received</event>
+        </component>
+
+        <component type="notification" name="Replacement Completed">
+            <file>config/notifications.xml</file>
+            <description>Notifies student that replacement book is ready for pickup</description>
+            <event>x_1997678_acad_resolve.replacement_completed</event>
+        </component>
+
+        <!-- Integration Hub -->
+        <component type="integration" name="Payment Gateway Connector">
+            <file>config/integration_hub.xml</file>
+            <description>Integrates with external payment gateway to process payments</description>
+            <required_credentials>payment_gateway_api_key</required_credentials>
+        </component>
+
+        <component type="integration" name="SMTP Email Service">
+            <file>config/integration_hub.xml</file>
+            <description>Sends email notifications via SMTP server</description>
+            <required_credentials>smtp_username,smtp_password</required_credentials>
+        </component>
+
+        <component type="integration" name="Copilot AI Assessment">
+            <file>config/integration_hub.xml</file>
+            <description>Integrates with Copilot for AI-driven dispute assessment</description>
+            <required_credentials>copilot_client_id,copilot_secret</required_credentials>
+        </component>
+
+        <component type="integration" name="LMS Student Verification">
+            <file>config/integration_hub.xml</file>
+            <description>Verifies student status in LMS before processing claims</description>
+            <required_credentials>lms_api_key</required_credentials>
+        </component>
+
+        <component type="integration" name="Analytics Event Tracking">
+            <file>config/integration_hub.xml</file>
+            <description>Sends incident data to analytics platform for reporting</description>
+            <required_credentials>analytics_api_key</required_credentials>
+        </component>
+
+        <!-- Flow Designer -->
+        <component type="flow" name="Incident Intake Flow">
+            <file>config/flows.xml</file>
+            <description>Captures and categorizes incident from student submission</description>
+            <trigger_type>record</trigger_type>
+        </component>
+
+        <component type="flow" name="Incident Approval Workflow">
+            <file>config/flows.xml</file>
+            <description>Routes approval requests to library staff and managers</description>
+            <trigger_type>action</trigger_type>
+        </component>
+
+        <component type="flow" name="Payment Processing Flow">
+            <file>config/flows.xml</file>
+            <description>Handles payment collection and incident resolution</description>
+            <trigger_type>action</trigger_type>
+        </component>
+
+        <component type="flow" name="Incident Escalation Flow">
+            <file>config/flows.xml</file>
+            <description>Escalates unresolved incidents to management</description>
+            <trigger_type>schedule</trigger_type>
+        </component>
+
+        <!-- Service Portal -->
+        <component type="service_portal_widget" name="Report Book Incident">
+            <file>config/service_portal.xml</file>
+            <description>Allows students to report lost or damaged books</description>
+            <roles>acad_resolve.student</roles>
+        </component>
+
+        <component type="service_portal_widget" name="My Incidents">
+            <file>config/service_portal.xml</file>
+            <description>Shows student's open and recent incidents</description>
+            <roles>acad_resolve.student</roles>
+        </component>
+
+        <component type="service_portal_widget" name="Payment Portal">
+            <file>config/service_portal.xml</file>
+            <description>Secure payment processing for incident fees</description>
+            <roles>acad_resolve.student</roles>
+        </component>
+
+        <component type="service_portal_widget" name="Help & FAQ">
+            <file>config/service_portal.xml</file>
+            <description>Frequently asked questions about book disputes</description>
+            <roles>acad_resolve.student,acad_resolve.library_staff</roles>
+        </component>
+
+        <!-- User Roles & Access Control -->
+        <component type="user_role" name="acad_resolve.admin">
+            <file>config/user_roles_access.xml</file>
+            <description>Academic Resolve Administrator - Full system access</description>
+        </component>
+
+        <component type="user_role" name="acad_resolve.library_staff">
+            <file>config/user_roles_access.xml</file>
+            <description>Academic Resolve Library Staff - Can review and manage incidents</description>
+        </component>
+
+        <component type="user_role" name="acad_resolve.student">
+            <file>config/user_roles_access.xml</file>
+            <description>Academic Resolve Student - Can create and view own incidents</description>
+        </component>
+
+        <component type="user_role" name="acad_resolve.approver">
+            <file>config/user_roles_access.xml</file>
+            <description>Academic Resolve Approver - Approves disputes and fees</description>
+        </component>
+
+        <!-- API Endpoints -->
+        <component type="api" name="Fluent API">
+            <file>src/fluent/index.now.ts</file>
+            <description>Main API routes for incident management and business logic</description>
+            <endpoints>
+                <endpoint>POST /createIncident</endpoint>
+                <endpoint>GET /getIncident</endpoint>
+                <endpoint>POST /updateIncidentStatus</endpoint>
+                <endpoint>GET /listIncidents</endpoint>
+                <endpoint>POST /calculateFee</endpoint>
+                <endpoint>POST /initiatePayment</endpoint>
+                <endpoint>POST /submitForApproval</endpoint>
+                <endpoint>POST /assessDisputeWithAI</endpoint>
+            </endpoints>
+        </component>
+    </components>
+
+    <dependencies>
+        <dependency type="module" name="@servicenow/sdk">
+            <version>4.6.0</version>
+            <required>true</required>
+        </dependency>
+        <dependency type="module" name="react">
+            <version>19.x</version>
+            <required>true</required>
+        </dependency>
+        <dependency type="module" name="react-dom">
+            <version>19.x</version>
+            <required>true</required>
+        </dependency>
+    </dependencies>
+
+    <required_plugins>
+        <plugin>com.snc.integration_hub</plugin>
+        <plugin>com.snc.flow_designer</plugin>
+        <plugin>com.snc.service_portal</plugin>
+        <plugin>com.snc.nowx</plugin>
+    </required_plugins>
+
+    <configuration_steps>
+        <step>1. Install required plugins (Integration Hub, Flow Designer, Service Portal)</step>
+        <step>2. Create database tables from database_schema.xml</step>
+        <step>3. Create user roles and assign permissions</step>
+        <step>4. Configure Integration Hub connections with credentials</step>
+        <step>5. Create business rules</step>
+        <step>6. Add client scripts and UI actions</step>
+        <step>7. Configure notifications and email settings</step>
+        <step>8. Deploy Flow Designer flows</step>
+        <step>9. Create Service Portal widgets</step>
+        <step>10. Build and deploy React frontend</step>
+        <step>11. Test all workflows and integrations</step>
+        <step>12. Set up initial fee schedules</step>
+    </configuration_steps>
+
+</update_set>

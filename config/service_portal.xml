@@ -1,0 +1,577 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export_set application="Academic Resolve" version="1.0.0">
+
+  <!-- SERVICE PORTAL 1: Report Book Incident Widget -->
+  <service_portal_widget name="Report Book Incident" 
+                         table="x_1997678_acad_resolve_book_incident"
+                         type="form">
+    <description>Allows students to report lost or damaged books</description>
+    <roles>acad_resolve.student</roles>
+    
+    <template><![CDATA[
+<div class="incident-form-widget">
+  <h2>Report Lost or Damaged Book</h2>
+  <p class="form-help">Fill out the form below to report a lost or damaged item from the academic library.</p>
+  
+  <form>
+    <fieldset>
+      <legend>Book Information</legend>
+      
+      <div class="form-group">
+        <label for="book_title">Book Title *</label>
+        <input type="text" id="book_title" name="book_title" required 
+               placeholder="Enter the book title">
+      </div>
+      
+      <div class="form-group">
+        <label for="book_isbn">ISBN (optional)</label>
+        <input type="text" id="book_isbn" name="book_isbn" 
+               placeholder="ISBN-13">
+      </div>
+      
+      <div class="form-group">
+        <label for="book_value">Estimated Book Value *</label>
+        <div class="input-group">
+          <span class="input-group-addon">$</span>
+          <input type="number" id="book_value" name="book_value" 
+                 min="1" step="0.01" required>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Incident Details</legend>
+      
+      <div class="form-group">
+        <label for="damage_type">Type of Incident *</label>
+        <select id="damage_type" name="damage_type" required>
+          <option value="">-- Select --</option>
+          <option value="lost">Lost</option>
+          <option value="water_damage">Water Damage</option>
+          <option value="physical_damage">Physical Damage</option>
+          <option value="tear">Torn Pages</option>
+          <option value="mold">Mold/Mildew</option>
+          <option value="missing_pages">Missing Pages</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="damage_level">Damage Severity *</label>
+        <select id="damage_level" name="damage_level" required>
+          <option value="">-- Select --</option>
+          <option value="light">Light (Minor cosmetic damage)</option>
+          <option value="medium">Medium (Affects usability)</option>
+          <option value="high">High (Book unusable)</option>
+          <option value="replacement">Total Loss/Replacement Required</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="incident_date">When Did This Happen? *</label>
+        <input type="date" id="incident_date" name="incident_date" required>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description *</label>
+        <textarea id="description" name="description" rows="5" required
+                  placeholder="Provide detailed information about the incident, damage, or loss..."></textarea>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Photos (Optional but Recommended)</legend>
+      <p class="form-help">Upload photos of the damage. Supported formats: JPEG, PNG, GIF (Max 5MB each)</p>
+      
+      <div id="photo-upload-area" class="photo-upload">
+        <input type="file" id="photo_1" name="photo_1" accept="image/*">
+        <input type="file" id="photo_2" name="photo_2" accept="image/*">
+        <input type="file" id="photo_3" name="photo_3" accept="image/*">
+      </div>
+      <small id="photo-hints" class="form-text text-muted"></small>
+    </fieldset>
+
+    <fieldset>
+      <legend>Contact Information</legend>
+      
+      <div class="form-group">
+        <label for="student_email">Email Address *</label>
+        <input type="email" id="student_email" name="student_email" required>
+      </div>
+
+      <div class="form-group">
+        <label for="phone">Phone Number</label>
+        <input type="tel" id="phone" name="phone">
+      </div>
+    </fieldset>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Submit Report</button>
+      <button type="reset" class="btn btn-secondary">Clear Form</button>
+    </div>
+
+    <div id="form-messages"></div>
+  </form>
+</div>
+
+<style>
+.incident-form-widget {
+  max-width: 600px;
+  margin: 20px 0;
+}
+.form-group {
+  margin-bottom: 20px;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-family: Arial, sans-serif;
+}
+.input-group {
+  display: flex;
+}
+.input-group-addon {
+  padding: 8px 12px;
+  background: #f5f5f5;
+  border: 1px solid #ccc;
+  border-right: 0;
+  border-radius: 4px 0 0 4px;
+}
+.input-group input {
+  border-radius: 0 4px 4px 0;
+}
+.form-help {
+  font-size: 0.9em;
+  color: #666;
+  margin-bottom: 15px;
+}
+.photo-upload {
+  padding: 20px;
+  border: 2px dashed #ccc;
+  border-radius: 4px;
+  text-align: center;
+}
+.form-actions {
+  margin-top: 30px;
+  display: flex;
+  gap: 10px;
+}
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.btn-primary {
+  background: #0073cf;
+  color: white;
+}
+.btn-secondary {
+  background: #f5f5f5;
+  color: #333;
+  border: 1px solid #ccc;
+}
+</style>
+    ]]></template>
+
+    <script><![CDATA[
+// Form submission handler
+document.querySelector('form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  const formData = new FormData(this);
+  const data = Object.fromEntries(formData);
+  
+  try {
+    const response = await fetch('/api/now/x_1997678_acad_resolve/createIncident', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+    
+    const result = await response.json();
+    
+    if (response.ok) {
+      document.getElementById('form-messages').innerHTML = 
+        '<div class="alert alert-success">Incident reported successfully! Incident #' + 
+        result.number + '</div>';
+      document.querySelector('form').reset();
+    } else {
+      throw new Error(result.error);
+    }
+  } catch (error) {
+    document.getElementById('form-messages').innerHTML = 
+      '<div class="alert alert-danger">Error: ' + error.message + '</div>';
+  }
+});
+    ]]></script>
+  </service_portal_widget>
+
+  <!-- SERVICE PORTAL 2: View My Incidents Widget -->
+  <service_portal_widget name="My Incidents" 
+                         table="x_1997678_acad_resolve_book_incident"
+                         type="list">
+    <description>Shows student's open and recent incidents</description>
+    <roles>acad_resolve.student</roles>
+    
+    <template><![CDATA[
+<div class="incidents-list-widget">
+  <h3>Your Book Disputes</h3>
+  
+  <div class="tabs">
+    <button class="tab-button active" data-filter="open">Open</button>
+    <button class="tab-button" data-filter="pending_approval">Pending</button>
+    <button class="tab-button" data-filter="closed">Resolved</button>
+  </div>
+
+  <div id="incidents-table">
+    <table class="incidents-table">
+      <thead>
+        <tr>
+          <th>Incident #</th>
+          <th>Book Title</th>
+          <th>Status</th>
+          <th>Fee</th>
+          <th>Created</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="incidents-tbody">
+        <tr><td colspan="6">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<style>
+.incidents-list-widget { padding: 20px; }
+.tabs { margin-bottom: 20px; display: flex; gap: 10px; }
+.tab-button {
+  padding: 8px 16px;
+  border: 1px solid #ccc;
+  background: #f5f5f5;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.tab-button.active {
+  background: #0073cf;
+  color: white;
+  border-color: #0073cf;
+}
+.incidents-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+.incidents-table th, .incidents-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+.incidents-table th {
+  background: #f5f5f5;
+  font-weight: 600;
+}
+.incidents-table tr:hover {
+  background: #f9f9f9;
+}
+</style>
+
+<script>
+loadIncidents('open');
+
+document.querySelectorAll('.tab-button').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    loadIncidents(this.dataset.filter);
+  });
+});
+
+async function loadIncidents(filter) {
+  const tbody = document.getElementById('incidents-tbody');
+  tbody.innerHTML = '<tr><td colspan="6">Loading...</td></tr>';
+  
+  try {
+    const response = await fetch('/api/now/x_1997678_acad_resolve/listIncidents?state=' + filter);
+    const result = await response.json();
+    
+    if (result.incidents.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6">No incidents found</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = result.incidents.map(incident => `
+      <tr>
+        <td><strong>${incident.number}</strong></td>
+        <td>${incident.book_title}</td>
+        <td><span class="badge badge-${getStatusClass(incident.state)}">${incident.state}</span></td>
+        <td>$${incident.calculated_fee}</td>
+        <td>${new Date(incident.created_on).toLocaleDateString()}</td>
+        <td><a href="/incident/${incident.id}" class="btn-link">View</a></td>
+      </tr>
+    `).join('');
+  } catch (error) {
+    tbody.innerHTML = '<tr><td colspan="6">Error loading incidents</td></tr>';
+  }
+}
+
+function getStatusClass(state) {
+  const classes = {
+    'open': 'primary',
+    'pending_approval': 'warning',
+    'closed': 'success',
+    'rejected': 'danger'
+  };
+  return classes[state] || 'secondary';
+}
+</script>
+    ]]></template>
+  </service_portal_widget>
+
+  <!-- SERVICE PORTAL 3: Make Payment Widget -->
+  <service_portal_widget name="Payment Portal" 
+                         table="x_1997678_acad_resolve_book_incident"
+                         type="form">
+    <description>Secure payment processing for incident fees</description>
+    <roles>acad_resolve.student</roles>
+    
+    <template><![CDATA[
+<div class="payment-widget">
+  <h3>Dispute Resolution Payment</h3>
+  
+  <div id="incident-summary" class="summary-box">
+    <div class="summary-item">
+      <span class="label">Incident #:</span>
+      <span class="value" id="incident-number">-</span>
+    </div>
+    <div class="summary-item">
+      <span class="label">Book:</span>
+      <span class="value" id="book-title">-</span>
+    </div>
+    <div class="summary-item">
+      <span class="label">Amount Due:</span>
+      <span class="value large" id="amount-due">-</span>
+    </div>
+  </div>
+
+  <div id="payment-form">
+    <div class="form-group">
+      <label for="payment_method">Payment Method</label>
+      <select id="payment_method" required>
+        <option value="">-- Select --</option>
+        <option value="credit_card">Credit Card</option>
+        <option value="debit_card">Debit Card</option>
+        <option value="bank_transfer">Bank Transfer</option>
+      </select>
+    </div>
+
+    <div id="card-element" style="display: none;">
+      <div class="form-group">
+        <label for="card_number">Card Number</label>
+        <input type="text" id="card_number" placeholder="1234 5678 9012 3456" required>
+      </div>
+      <div class="row">
+        <div class="form-group col">
+          <label for="expiry">Expires</label>
+          <input type="text" id="expiry" placeholder="MM/YY" required>
+        </div>
+        <div class="form-group col">
+          <label for="cvv">CVV</label>
+          <input type="text" id="cvv" placeholder="123" required>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-primary" onclick="processPayment()">Pay Now</button>
+      <button type="button" class="btn btn-secondary" onclick="cancelPayment()">Cancel</button>
+    </div>
+  </div>
+
+  <div id="payment-result"></div>
+</div>
+
+<style>
+.payment-widget { max-width: 500px; margin: 20px 0; }
+.summary-box {
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 4px;
+  margin-bottom: 30px;
+}
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.summary-item .label { font-weight: 600; }
+.summary-item .value.large { font-size: 1.5em; font-weight: bold; color: #0073cf; }
+</style>
+
+<script>
+// Load incident details
+const incidentId = new URLSearchParams(window.location.search).get('incident');
+if (incidentId) {
+  loadIncidentForPayment(incidentId);
+}
+
+async function loadIncidentForPayment(id) {
+  const response = await fetch('/api/now/x_1997678_acad_resolve/getIncident?id=' + id);
+  const incident = await response.json();
+  
+  document.getElementById('incident-number').textContent = incident.number;
+  document.getElementById('book-title').textContent = incident.book_title;
+  document.getElementById('amount-due').textContent = '$' + incident.calculated_fee;
+}
+
+document.getElementById('payment_method').addEventListener('change', function(e) {
+  document.getElementById('card-element').style.display = 
+    this.value === 'credit_card' ? 'block' : 'none';
+});
+
+async function processPayment() {
+  const incidentId = new URLSearchParams(window.location.search).get('incident');
+  const method = document.getElementById('payment_method').value;
+  
+  try {
+    const response = await fetch('/api/now/x_1997678_acad_resolve/initiatePayment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        incident_id: incidentId,
+        payment_method: method
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.payment_initiated) {
+      // Redirect to payment gateway
+      window.location.href = result.redirect_url;
+    } else {
+      throw new Error(result.error);
+    }
+  } catch (error) {
+    document.getElementById('payment-result').innerHTML = 
+      '<div class="alert alert-danger">Error: ' + error.message + '</div>';
+  }
+}
+
+function cancelPayment() {
+  window.history.back();
+}
+</script>
+    ]]></template>
+  </service_portal_widget>
+
+  <!-- SERVICE PORTAL 4: FAQ Widget -->
+  <service_portal_widget name="Help & FAQ" 
+                         type="static">
+    <description>Frequently asked questions about book disputes</description>
+    
+    <template><![CDATA[
+<div class="faq-widget">
+  <h3>Frequently Asked Questions</h3>
+  
+  <div class="accordion">
+    <div class="accordion-item">
+      <h4 class="accordion-header">How do I report a lost or damaged book?</h4>
+      <div class="accordion-content">
+        <p>Use the "Report Book Incident" form to submit your claim. You'll need to provide book details, incident date, and photos of the damage if applicable.</p>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <h4 class="accordion-header">How long does review take?</h4>
+      <div class="accordion-content">
+        <p>Library staff typically review incidents within 2-3 business days. You'll receive an email notification with the decision.</p>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <h4 class="accordion-header">What if I disagree with the fee?</h4>
+      <div class="accordion-content">
+        <p>You can appeal any decision within 10 business days by contacting the library manager with additional supporting evidence.</p>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <h4 class="accordion-header">How do I pay my fee?</h4>
+      <div class="accordion-content">
+        <p>Once your claim is approved, you can pay online through the Payment Portal using your preferred payment method.</p>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <h4 class="accordion-header">Can I get a replacement instead of paying?</h4>
+      <div class="accordion-content">
+        <p>Yes! If your claim is approved, you can choose to receive a replacement book instead of paying the fee.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="contact-box">
+    <h4>Still Have Questions?</h4>
+    <p>Contact the Academic Library:</p>
+    <p><strong>Email:</strong> library@acadresolve.edu<br>
+       <strong>Phone:</strong> (555) 123-4567<br>
+       <strong>Hours:</strong> Mon-Fri 9am-6pm, Sat 10am-4pm</p>
+  </div>
+</div>
+
+<style>
+.faq-widget { max-width: 600px; margin: 20px 0; }
+.accordion-item {
+  border: 1px solid #ddd;
+  margin-bottom: 10px;
+  border-radius: 4px;
+}
+.accordion-header {
+  padding: 15px;
+  background: #f5f5f5;
+  cursor: pointer;
+  margin: 0;
+  font-size: 1em;
+}
+.accordion-header:hover {
+  background: #eee;
+}
+.accordion-content {
+  padding: 15px;
+  display: none;
+}
+.accordion-item.active .accordion-content {
+  display: block;
+}
+.contact-box {
+  background: #e7f3ff;
+  padding: 20px;
+  border-radius: 4px;
+  margin-top: 30px;
+}
+</style>
+
+<script>
+document.querySelectorAll('.accordion-header').forEach(header => {
+  header.addEventListener('click', function() {
+    this.closest('.accordion-item').classList.toggle('active');
+  });
+});
+</script>
+    ]]></template>
+  </service_portal_widget>
+
+</export_set>

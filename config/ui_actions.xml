@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export_set application="Academic Resolve" version="1.0.0">
+
+  <!-- UI ACTION 1: Create Payment Request -->
+  <ui_action name="Create Payment Request" table="x_1997678_acad_resolve_book_incident" 
+              show="true" onclick="true">
+    <description>Initiates payment process for incident fee</description>
+    <condition><![CDATA[
+current.state == 'open' && (gs.getUser().hasRole('acad_resolve.student') || 
+gs.getUser().hasRole('acad_resolve.admin'))
+    ]]></condition>
+    <script><![CDATA[
+(function executeAction() {
+    try {
+        // Check if already paid or resolved
+        if (current.state == 'paid' || current.state == 'replaced') {
+            gs.addErrorMessage('This incident is already resolved');
+            action.setRedirectURL(current);
+            return;
+        }
+        
+        // Open payment dialog/page
+        var url = '/payment_portal?incident=' + current.sys_id + 
+                  '&student=' + current.student_id + 
+                  '&amount=' + current.calculated_fee;
+        
+        action.setRedirectURL(url);
+        
+    } catch (error) {
+        gs.error('Error initiating payment: ' + error.message, 'PaymentError');
+        gs.addErrorMessage('Failed to initiate payment. Please try again.');
+    }
+})();
+    ]]></script>
+  </ui_action>
+
+  <!-- UI ACTION 2: Approve Replacement -->
+  <ui_action name="Approve Replacement" table="x_1997678_acad_resolve_book_incident" 
+              show="true" onclick="true">
+    <description>Marks item as approved for replacement</description>
+    <condition><![CDATA[
+(current.state == 'open' || current.state == 'pending_approval') && 
+gs.getUser().hasRole('acad_resolve.library_staff')
+    ]]></condition>
+    <script><![CDATA[
+(function executeAction() {
+    try {
+        current.state = 'replacement_approved';
+        current.approval_date = gs.now();
+        current.approver = gs.getUser().getID();
+        current.update();
+        
+        // Send notification to student
+        gs.eventQueue('x_1997678_acad_resolve.replacement_approved', current.sys_id, '');
+        
+        gs.addInfoMessage('Replacement approved. Student will be notified.');
+        action.setRedirectURL(current);
+        
+    } catch (error) {
+        gs.error('Error approving replacement: ' + error.message, 'ApprovalError');
+        gs.addErrorMessage('Failed to approve replacement.');
+    }
+})();
+    ]]></script>
+  </ui_action>
+
+  <!-- UI ACTION 3: Send for Review -->
+  <ui_action name="Send for Review" table="x_1997678_acad_resolve_book_incident" 
+              show="true" onclick="true">
+    <description>Escalates incident to library manager for review</description>
+    <condition><![CDATA[
+current.state == 'open' && 
+(gs.getUser().hasRole('acad_resolve.library_staff') || 
+gs.getUser().hasRole('acad_resolve.admin'))
+    ]]></condition>
+    <script><![CDATA[
+(function executeAction() {
+    try {
+        current.state = 'pending_review';
+        current.review_requested_date = gs.now();
+        current.review_requested_by = gs.getUser().getID();
+        current.update();
+        
+        // Queue review notification
+        gs.eventQueue('x_1997678_acad_resolve.review_requested', current.sys_id, '');
+        
+        gs.addInfoMessage('Incident sent for manager review');
+        action.setRedirectURL(current);
+        
+    } catch (error) {
+        gs.error('Error sending for review: ' + error.message, 'ReviewError');
+        gs.addErrorMessage('Failed to send for review.');
+    }
+})();
+    ]]></script>
+  </ui_action>
+
+  <!-- UI ACTION 4: Close Dispute -->
+  <ui_action name="Close Dispute" table="x_1997678_acad_resolve_book_incident" 
+              show="true" onclick="true">
+    <description>Closes the dispute with final notes</description>
+    <condition><![CDATA[
+(current.state == 'paid' || current.state == 'replaced') && 
+gs.getUser().hasRole('acad_resolve.library_staff')
+    ]]></condition>
+    <script><![CDATA[
+(function executeAction() {
+    try {
+        // Require closure notes
+        var notes = gs.getProperty('x_1997678_acad_resolve.closure_notes');
+        if (!notes || notes.trim() === '') {
+            gs.addErrorMessage('Closure notes are required');
+            return;
+        }
+        
+        current.state = 'closed';
+        current.closure_date = gs.now();
+        current.closure_notes = notes;
+        current.update();
+        
+        // Send closure notification
+        gs.eventQueue('x_1997678_acad_resolve.dispute_closed', current.sys_id, '');
+        
+        gs.addInfoMessage('Dispute closed successfully');
+        action.setRedirectURL(current);
+        
+    } catch (error) {
+        gs.error('Error closing dispute: ' + error.message, 'ClosureError');
+        gs.addErrorMessage('Failed to close dispute.');
+    }
+})();
+    ]]></script>
+  </ui_action>
+
+  <!-- UI ACTION 5: Request AI Assessment -->
+  <ui_action name="Get AI Assessment" table="x_1997678_acad_resolve_book_incident" 
+              show="true" onclick="true">
+    <description>Requests Copilot AI to assess the dispute</description>
+    <condition><![CDATA[
+current.state == 'open' && current.ai_assessment == '' && 
+(gs.getUser().hasRole('acad_resolve.admin') || 
+gs.getUser().hasRole('acad_resolve.library_staff'))
+    ]]></condition>
+    <script><![CDATA[
+(function executeAction() {
+    try {
+        // Call AI assessment via API
+        var request = new sn_http.SimpleRequest();
+        request.setEndpoint('instance_api/x_1997678_acad_resolve/assess_dispute_with_ai');
+        request.setHttpMethod('POST');
+        
+        var payload = {
+            incident_id: current.sys_id
+        };
+        
+        request.setRequestBody(JSON.stringify(payload));
+        request.setHeader('Content-Type', 'application/json');
+        
+        var response = request.execute();
+        
+        if (response.getStatusCode() === 200) {
+            var result = JSON.parse(response.getBody());
+            current.ai_assessment = result.assessment;
+            current.recommended_damage_level = result.recommended_damage_level;
+            current.recommended_fee = result.recommended_fee;
+            current.update();
+            
+            gs.addInfoMessage('AI Assessment Complete:\n' + 
+                            'Confidence: ' + (result.confidence_score * 100).toFixed(1) + '%\n' +
+                            'Recommended Fee: $' + result.recommended_fee);
+        } else {
+            gs.addErrorMessage('AI assessment failed');
+        }
+        
+        action.setRedirectURL(current);
+        
+    } catch (error) {
+        gs.error('Error requesting AI assessment: ' + error.message, 'AIError');
+        gs.addErrorMessage('Failed to get AI assessment.');
+    }
+})();
+    ]]></script>
+  </ui_action>
+
+  <!-- UI ACTION 6: Reject Dispute -->
+  <ui_action name="Reject Dispute" table="x_1997678_acad_resolve_book_incident" 
+              show="true" onclick="true">
+    <description>Rejects the dispute claim with explanation</description>
+    <condition><![CDATA[
+current.state == 'pending_approval' && 
+gs.getUser().hasRole('acad_resolve.approver')
+    ]]></condition>
+    <script><![CDATA[
+(function executeAction() {
+    try {
+        current.state = 'rejected';
+        current.rejection_date = gs.now();
+        current.rejection_reason = 'Claim does not qualify for reimbursement';
+        current.update();
+        
+        // Send rejection notification
+        gs.eventQueue('x_1997678_acad_resolve.dispute_rejected', current.sys_id, '');
+        
+        gs.addInfoMessage('Dispute rejected. Student has been notified.');
+        action.setRedirectURL(current);
+        
+    } catch (error) {
+        gs.error('Error rejecting dispute: ' + error.message, 'RejectionError');
+        gs.addErrorMessage('Failed to reject dispute.');
+    }
+})();
+    ]]></script>
+  </ui_action>
+
+</export_set>

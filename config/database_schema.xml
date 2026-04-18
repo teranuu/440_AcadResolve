@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export_set application="Academic Resolve" version="1.0.0">
+
+  <!-- TABLE 1: Book Incident -->
+  <table name="x_1997678_acad_resolve_book_incident" extends="task">
+    <label>Book Incident</label>
+    <description>Records of lost or damaged books from academic library</description>
+    
+    <!-- Auto Numbering -->
+    <auto_number prefix="INC" />
+    
+    <fields>
+      <!-- Core Fields -->
+      <field name="student_id" type="reference" reference_to="sys_user">
+        <label>Student</label>
+        <mandatory>true</mandatory>
+        <unique>false</unique>
+        <help_text>The student who submitted the incident report</help_text>
+      </field>
+
+      <field name="student_email" type="email">
+        <label>Student Email</label>
+        <mandatory>false</mandatory>
+        <read_only>true</read_only>
+      </field>
+
+      <!-- Book Information -->
+      <field name="book_title" type="string" max_length="255">
+        <label>Book Title</label>
+        <mandatory>true</mandatory>
+        <help_text>Full title of the book</help_text>
+      </field>
+
+      <field name="book_isbn" type="string" max_length="20">
+        <label>ISBN</label>
+        <mandatory>false</mandatory>
+        <help_text>ISBN-10 or ISBN-13</help_text>
+      </field>
+
+      <field name="book_value" type="decimal" precision="10" scale="2">
+        <label>Book Value (USD)</label>
+        <mandatory>true</mandatory>
+        <help_text>Original purchase price of the book</help_text>
+      </field>
+
+      <field name="author" type="string" max_length="255">
+        <label>Book Author</label>
+        <mandatory>false</mandatory>
+      </field>
+
+      <field name="publisher" type="string" max_length="255">
+        <label>Publisher</label>
+        <mandatory>false</mandatory>
+      </field>
+
+      <!-- Incident Details -->
+      <field name="damage_type" type="choice" choice_list="x_1997678_acad_resolve_damage_type">
+        <label>Type of Damage/Loss</label>
+        <mandatory>true</mandatory>
+        <choices>
+          <choice value="lost">Lost</choice>
+          <choice value="water_damage">Water Damage</choice>
+          <choice value="physical_damage">Physical Damage</choice>
+          <choice value="tear">Torn Pages</choice>
+          <choice value="mold">Mold/Mildew</choice>
+          <choice value="missing_pages">Missing Pages</choice>
+          <choice value="other">Other</choice>
+        </choices>
+      </field>
+
+      <field name="damage_level" type="choice" choice_list="x_1997678_acad_resolve_damage_level">
+        <label>Damage Severity</label>
+        <mandatory>true</mandatory>
+        <choices>
+          <choice value="light">Light (Minor cosmetic damage)</choice>
+          <choice value="medium">Medium (Affects usability)</choice>
+          <choice value="high">High (Book unusable)</choice>
+          <choice value="replacement">Total Loss/Replacement Required</choice>
+        </choices>
+      </field>
+
+      <field name="incident_date" type="date">
+        <label>Date of Incident</label>
+        <mandatory>true</mandatory>
+        <help_text>When the damage or loss occurred</help_text>
+      </field>
+
+      <field name="description" type="text" max_length="4000">
+        <label>Detailed Description</label>
+        <mandatory>true</mandatory>
+        <help_text>Detailed explanation of what happened</help_text>
+      </field>
+
+      <!-- Fee Information -->
+      <field name="calculated_fee" type="decimal" precision="10" scale="2">
+        <label>Calculated Fee (USD)</label>
+        <mandatory>false</mandatory>
+        <read_only>true</read_only>
+        <help_text>Automatically calculated based on damage level and book value</help_text>
+      </field>
+
+      <field name="fee_type" type="string" max_length="50">
+        <label>Fee Type</label>
+        <mandatory>false</mandatory>
+        <help_text>replacement_cost, partial_damage, etc.</help_text>
+      </field>
+
+      <!-- Approval Information -->
+      <field name="state" type="choice" choice_list="x_1997678_acad_resolve_incident_state">
+        <label>Status</label>
+        <mandatory>false</mandatory>
+        <default_value>open</default_value>
+        <choices>
+          <choice value="open">Open</choice>
+          <choice value="pending_review">Pending Review</choice>
+          <choice value="pending_approval">Pending Approval</choice>
+          <choice value="replacement_approved">Replacement Approved</choice>
+          <choice value="paid">Paid</choice>
+          <choice value="replaced">Replaced</choice>
+          <choice value="closed">Closed</choice>
+          <choice value="rejected">Rejected</choice>
+          <choice value="error">Error</choice>
+        </choices>
+      </field>
+
+      <field name="approval_status" type="choice">
+        <label>Approval Status</label>
+        <mandatory>false</mandatory>
+        <choices>
+          <choice value="pending">Pending</choice>
+          <choice value="approved">Approved</choice>
+          <choice value="rejected">Rejected</choice>
+          <choice value="more_info">More Info Requested</choice>
+        </choices>
+      </field>
+
+      <field name="approval_date" type="date_time">
+        <label>Approval Date</label>
+        <mandatory>false</mandatory>
+      </field>
+
+      <field name="approver" type="reference" reference_to="sys_user">
+        <label>Approver</label>
+        <mandatory>false</mandatory>
+      </field>
+
+      <field name="approver_notes" type="text" max_length="2000">
+        <label>Approver Notes</label>
+        <mandatory>false</mandatory>
+      </field>
+
+      <!-- AI Assessment -->
+      <field name="ai_assessment" type="text" max_length="4000">
+        <label>AI Assessment</label>
+        <mandatory>false</mandatory>
+        <read_only>true</read_only>
+      </field>
+
+      <field name="recommended_damage_level" type="choice">
+        <label>AI Recommended Damage Level</label>
+        <mandatory>false</mandatory>
+      </field>
+
+      <field name="recommended_fee" type="decimal" precision="10" scale="2">
+        <label>AI Recommended Fee (USD)</label>
+        <mandatory>false</mandatory>
+      </field>
+
+      <field name="ai_confidence" type="decimal" precision="5" scale="4">
+        <label>AI Confidence Score</label>
+        <mandatory>false</mandatory>
+      </field>
+
+      <!-- Payment Information -->
+      <field name="payment_status" type="choice">
+        <label>Payment Status</label>
+        <mandatory>false</mandatory>
+        <choices>
+          <choice value="pending">Pending</choice>
+          <choice value="completed">Completed</choice>
+          <choice value="failed">Failed</choice>
+        </choices>
+      </field>
+
+      <field name="payment_date" type="date_time">
+        <label>Payment Date</label>
+        <mandatory>false</mandatory>
+      </field>
+
+      <field name="payment_gateway_id" type="string" max_length="100">
+        <label>Payment Gateway Transaction ID</label>
+        <mandatory>false</mandatory>
+        <read_only>true</read_only>
+      </field>
+
+      <field name="payment_error" type="text" max_length="500">
+        <label>Payment Error Message</label>
+        <mandatory>false</mandatory>
+      </field>
+
+      <!-- Resolution Information -->
+      <field name="resolved_date" type="date_time">
+        <label>Resolution Date</label>
+        <mandatory>false</mandatory>
+      </field>
+
+      <field name="resolution_method" type="choice">
+        <label>Resolution Method</label>
+        <mandatory>false</mandatory>
+        <choices>
+          <choice value="Payment">Payment</choice>
+          <choice value="Replacement">Replacement</choice>
+          <choice value="Waived">Waived</choice>
+        </choices>
+      </field>
+
+      <field name="resolution_notes" type="text" max_length="2000">
+        <label>Resolution Notes</label>
+        <mandatory>false</mandatory>
+      </field>
+
+      <field name="closure_date" type="date_time">
+        <label>Closure Date</label>
+        <mandatory>false</mandatory>
+      </field>
+
+      <field name="closure_notes" type="text" max_length="2000">
+        <label>Closure Notes</label>
+        <mandatory>false</mandatory>
+      </field>
+
+      <!-- Rejection Information -->
+      <field name="rejection_date" type="date_time">
+        <label>Rejection Date</label>
+        <mandatory>false</mandatory>
+      </field>
+
+      <field name="rejection_reason" type="text" max_length="1000">
+        <label>Rejection Reason</label>
+        <mandatory>false</mandatory>
+      </field>
+    </fields>
+
+    <!-- Indexes -->
+    <index name="idx_student" fields="student_id" unique="false"/>
+    <index name="idx_state" fields="state" unique="false"/>
+    <index name="idx_created" fields="sys_created_on" unique="false"/>
+  </table>
+
+  <!-- TABLE 2: Fee Schedule -->
+  <table name="x_1997678_acad_resolve_fee_schedule">
+    <label>Fee Schedule</label>
+    <description>Configuration for calculating incident fees</description>
+
+    <fields>
+      <field name="damage_type" type="choice">
+        <label>Damage Type</label>
+        <mandatory>true</mandatory>
+        <choices>
+          <choice value="lost">Lost</choice>
+          <choice value="water_damage">Water Damage</choice>
+          <choice value="physical_damage">Physical Damage</choice>
+          <choice value="tear">Torn Pages</choice>
+          <choice value="mold">Mold/Mildew</choice>
+          <choice value="missing_pages">Missing Pages</choice>
+        </choices>
+      </field>
+
+      <field name="damage_level" type="choice">
+        <label>Damage Level</label>
+        <mandatory>true</mandatory>
+        <choices>
+          <choice value="light">Light</choice>
+          <choice value="medium">Medium</choice>
+          <choice value="high">High</choice>
+        </choices>
+      </field>
+
+      <field name="fee_percentage" type="decimal" precision="5" scale="2">
+        <label>Fee Percentage (%)</label>
+        <mandatory>true</mandatory>
+        <help_text>Percentage of book value charged as fee</help_text>
+      </field>
+
+      <field name="fee_type" type="choice">
+        <label>Fee Type</label>
+        <mandatory>true</mandatory>
+        <choices>
+          <choice value="percentage">Percentage of Value</choice>
+          <choice value="fixed">Fixed Amount</choice>
+          <choice value="replacement_cost">Replacement Cost</choice>
+        </choices>
+      </field>
+
+      <field name="description" type="text">
+        <label>Description</label>
+        <mandatory>false</mandatory>
+      </field>
+
+      <field name="active" type="boolean">
+        <label>Active</label>
+        <mandatory>false</mandatory>
+        <default_value>true</default_value>
+      </field>
+    </fields>
+  </table>
+
+  <!-- TABLE 3: Approval -->
+  <table name="x_1997678_acad_resolve_approval">
+    <label>Approval</label>
+    <description>Tracks approval workflow for disputes</description>
+
+    <fields>
+      <field name="incident_id" type="reference" reference_to="x_1997678_acad_resolve_book_incident">
+        <label>Incident</label>
+        <mandatory>true</mandatory>
+      </field>
+
+      <field name="approver_id" type="reference" reference_to="sys_user">
+        <label>Approver</label>
+        <mandatory>true</mandatory>
+      </field>
+
+      <field name="approval_status" type="choice">
+        <label>Approval Status</label>
+        <mandatory>false</mandatory>
+        <choices>
+          <choice value="pending">Pending</choice>
+          <choice value="approved">Approved</choice>
+          <choice value="rejected">Rejected</choice>
+          <choice value="more_info">More Info Needed</choice>
+        </choices>
+      </field>
+
+      <field name="approval_date" type="date_time">
+        <label>Approval Decision Date</label>
+        <mandatory>false</mandatory>
+      </field>
+
+      <field name="approval_comments" type="text">
+        <label>Approval Comments</label>
+        <mandatory>false</mandatory>
+      </field>
+
+      <field name="created_date" type="date_time">
+        <label>Created Date</label>
+        <mandatory>false</mandatory>
+      </field>
+
+      <field name="due_date" type="date_time">
+        <label>Due Date</label>
+        <mandatory>false</mandatory>
+      </field>
+    </fields>
+  </table>
+
+</export_set>

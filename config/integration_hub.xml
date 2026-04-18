@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export_set application="Academic Resolve" version="1.0.0">
+
+  <!-- INTEGRATION HUB 1: Payment Gateway Integration -->
+  <integration_hub name="Payment Gateway Connector" 
+                    active="true" type="outbound">
+    <description>Integrates with external payment gateway to process payments</description>
+    
+    <connection name="payment_gateway">
+      <host>api.payment-gateway.example.com</host>
+      <endpoint>/api/v1/charge</endpoint>
+      <method>POST</method>
+      <authentication type="api_key">
+        <credential_field>x-api-key</credential_field>
+      </authentication>
+      <timeout>30</timeout>
+    </connection>
+
+    <flow>
+      <name>Process Student Payment</name>
+      <trigger>x_1997678_acad_resolve.payment_initiated</trigger>
+      
+      <step type="transform">
+        <name>Format Payment Request</name>
+        <script><![CDATA[
+{
+  "amount": current.calculated_fee,
+  "currency": "USD",
+  "customer_id": current.student_id,
+  "description": "Book dispute payment for incident " + current.number,
+  "metadata": {
+    "incident_id": current.sys_id,
+    "book_title": current.book_title,
+    "damage_type": current.damage_type
+  },
+  "return_url": "https://instance.service-now.com/incident_confirm?id=" + current.sys_id
+}
+        ]]></script>
+      </step>
+
+      <step type="call_api">
+        <name>Call Payment Gateway</name>
+        <connection>payment_gateway</connection>
+        <request_data>${transform_output}</request_data>
+      </step>
+
+      <step type="response_handling">
+        <name>Handle Payment Response</name>
+        <success_handler><![CDATA[
+current.payment_gateway_id = response.transaction_id;
+current.payment_status = 'pending';
+current.update();
+gs.eventQueue('x_1997678_acad_resolve.payment_initiated_success', current.sys_id, '');
+        ]]></success_handler>
+        <error_handler><![CDATA[
+current.payment_error = response.error_message;
+gs.error('Payment gateway error: ' + response.error_message, 'PaymentError');
+        ]]></error_handler>
+      </step>
+    </flow>
+  </integration_hub>
+
+  <!-- INTEGRATION HUB 2: Email Service Integration -->
+  <integration_hub name="SMTP Email Service" 
+                    active="true" type="outbound">
+    <description>Sends email notifications via SMTP server</description>
+    
+    <connection name="smtp_server">
+      <host>smtp.acadresolve.edu</host>
+      <port>587</port>
+      <authentication type="basic">
+        <username>notifications@acadresolve.edu</username>
+        <password>${x_1997678_acad_resolve.smtp_password}</password>
+      </authentication>
+      <security>STARTTLS</security>
+    </connection>
+
+    <flow>
+      <name>Send Approval Email</name>
+      <trigger>x_1997678_acad_resolve.approval_requested</trigger>
+      
+      <step type="query">
+        <name>Get Approver Email</name>
+        <table>sys_user</table>
+        <query>user_name=${current.approver_id}</query>
+      </step>
+
+      <step type="format_email">
+        <name>Format Email Body</name>
+        <to>${query_result.email}</to>
+        <subject>Approval Required: Book Dispute #${current.number}</subject>
+        <body>
+          <html>
+            <h2>Incident Approval Required</h2>
+            <p><strong>Number:</strong> ${current.number}</p>
+            <p><strong>Student:</strong> ${current.student_id}</p>
+            <p><strong>Book:</strong> ${current.book_title}</p>
+            <p><strong>Amount:</strong> $${current.calculated_fee}</p>
+            <p><a href="${current.getURL()}">Review in System</a></p>
+          </html>
+        </body>
+      </step>
+
+      <step type="send_email">
+        <name>Send via SMTP</name>
+        <connection>smtp_server</connection>
+        <email_data>${format_email_output}</email_data>
+      </step>
+    </flow>
+  </integration_hub>
+
+  <!-- INTEGRATION HUB 3: Copilot AI Service Integration -->
+  <integration_hub name="Copilot AI Assessment" 
+                    active="true" type="outbound">
+    <description>Integrates with Copilot for AI-driven dispute assessment</description>
+    
+    <connection name="copilot_api">
+      <host>api.copilot.servicenow.com</host>
+      <endpoint>/api/v1/analyze</endpoint>
+      <method>POST</method>
+      <authentication type="oauth">
+        <client_id>${x_1997678_acad_resolve.copilot_client_id}</client_id>
+        <client_secret>${x_1997678_acad_resolve.copilot_secret}</client_secret>
+      </authentication>
+      <timeout>45</timeout>
+    </connection>
+
+    <flow>
+      <name>AI Assessment of Dispute</name>
+      <trigger>x_1997678_acad_resolve.ai_assessment_requested</trigger>
+      
+      <step type="transform">
+        <name>Prepare AI Prompt</name>
+        <script><![CDATA[
+{
+  "model": "gpt-4-vision",
+  "prompt": "Analyze this book damage dispute:\n" +
+            "Damage Type: " + current.damage_type + "\n" +
+            "Description: " + current.description + "\n" +
+            "Book Value: $" + current.book_value + "\n" +
+            "Damage Photos: [attached]\n" +
+            "Provide: 1) Damage assessment, 2) Recommended fee, 3) Confidence score",
+  "attachments": getIncidentPhotos(current.sys_id),
+  "temperature": 0.3,
+  "max_tokens": 500
+}
+        ]]></script>
+      </step>
+
+      <step type="call_api">
+        <name>Call Copilot</name>
+        <connection>copilot_api</connection>
+        <request_data>${transform_output}</request_data>
+      </step>
+
+      <step type="parse_response">
+        <name>Parse AI Response</name>
+        <script><![CDATA[
+current.ai_assessment = response.assessment;
+current.recommended_damage_level = response.predicted_damage_level;
+current.recommended_fee = response.recommended_fee;
+current.ai_confidence = response.confidence_score;
+current.update();
+        ]]></script>
+      </step>
+    </flow>
+  </integration_hub>
+
+  <!-- INTEGRATION HUB 4: Learning Management System (LMS) Integration -->
+  <integration_hub name="LMS Student Verification" 
+                    active="true" type="outbound">
+    <description>Verifies student status in LMS before processing claims</description>
+    
+    <connection name="lms_api">
+      <host>api.lms.institution.edu</host>
+      <endpoint>/api/v1/students</endpoint>
+      <method>GET</method>
+      <authentication type="api_key">
+        <credential_field>Authorization</credential_field>
+        <credential_value>Bearer ${x_1997678_acad_resolve.lms_api_key}</credential_value>
+      </authentication>
+    </connection>
+
+    <flow>
+      <name>Verify Student Status</name>
+      <trigger>x_1997678_acad_resolve.incident_created</trigger>
+      
+      <step type="call_api">
+        <name>Check Student in LMS</name>
+        <connection>lms_api</connection>
+        <request_params>
+          <param name="student_id">${current.student_id}</param>
+          <param name="academic_year">2024</param>
+        </request_params>
+      </step>
+
+      <step type="conditional">
+        <name>Validate Active Student</name>
+        <condition>response.status == 'active'</condition>
+        <true_action>
+          <step type="proceed">
+            <set_value field="student_verified" value="true"/>
+          </step>
+        </true_action>
+        <false_action>
+          <step type="abort">
+            <message>Student is not currently active. Please verify status.</message>
+          </step>
+        </false_action>
+      </step>
+    </flow>
+  </integration_hub>
+
+  <!-- INTEGRATION HUB 5: Analytics Integration -->
+  <integration_hub name="Analytics Event Tracking" 
+                    active="true" type="outbound">
+    <description>Sends incident data to analytics platform for reporting</description>
+    
+    <connection name="analytics_api">
+      <host>analytics.institution.edu</host>
+      <endpoint>/api/events</endpoint>
+      <method>POST</method>
+      <authentication type="api_key">
+        <credential_field>X-Analytics-Key</credential_field>
+      </authentication>
+      <batch_enabled>true</batch_enabled>
+      <batch_size>50</batch_size>
+    </connection>
+
+    <flow>
+      <name>Track Incident Events</name>
+      <trigger>x_1997678_acad_resolve.incident_created,x_1997678_acad_resolve.incident_resolved</trigger>
+      
+      <step type="transform">
+        <name>Format Analytics Event</name>
+        <script><![CDATA[
+{
+  "event_type": trigger_event_name,
+  "timestamp": gs.now(),
+  "incident_id": current.sys_id,
+  "damage_type": current.damage_type,
+  "damage_level": current.damage_level,
+  "fee_amount": current.calculated_fee,
+  "resolution_method": current.resolution_method,
+  "processing_time_hours": calculateProcessingTime(current)
+}
+        ]]></script>
+      </step>
+
+      <step type="call_api">
+        <name>Send to Analytics</name>
+        <connection>analytics_api</connection>
+        <request_data>${transform_output}</request_data>
+      </step>
+    </flow>
+  </integration_hub>
+
+</export_set>

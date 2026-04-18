@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export_set application="Academic Resolve" version="1.0.0">
+  
+  <!-- BUSINESS RULE 1: Auto-Calculate Fee on Insert/Update -->
+  <business_rule name="Auto Calculate Fee" table="x_1997678_acad_resolve_book_incident" 
+                  when="after" insert="true" update="true" query="false">
+    <description>Automatically calculates incident fee based on damage type and level</description>
+    <active>true</active>
+    <priority>100</priority>
+    <script><![CDATA[
+(function executeRule(current, previous) {
+    try {
+        // Only calculate if damage level changed or record is new
+        if (!previous || current.damage_level.changed() || current.book_value.changed()) {
+            
+            // Look up fee schedule
+            var feeSchedule = new GlideRecord('x_1997678_acad_resolve_fee_schedule');
+            feeSchedule.addQuery('damage_type', current.damage_type);
+            feeSchedule.addQuery('damage_level', current.damage_level);
+            feeSchedule.query();
+            
+            if (feeSchedule.next()) {
+                var baseValue = parseFloat(current.book_value);
+                var feePercent = parseFloat(feeSchedule.fee_percentage);
+                var calculatedFee = baseValue * (feePercent / 100);
+                
+                current.calculated_fee = calculatedFee.toFixed(2);
+                current.fee_type = feeSchedule.fee_type;
+                
+                // Log the calculation
+                gs.log('Fee calculated: $' + current.calculated_fee + 
+                        ' for damage level: ' + current.damage_level, 'FeeCalculation');
+            } else {
+                // Default: full replacement cost
+                current.calculated_fee = current.book_value;
+                current.fee_type = 'replacement_cost';
+            }
+            
+            // Prevent infinite loop
+            current.setWorkflow(false);
+        }
+    } catch (error) {
+        gs.error('Error calculating fee: ' + error.message, 'IncidentFeeCalculation');
+    }
+})(current, previous);
+    ]]></script>
+  </business_rule>
+
+  <!-- BUSINESS RULE 2: Send Notification on Incident Creation -->
+  <business_rule name="Notify Library on Incident" table="x_1997678_acad_resolve_book_incident" 
+                  when="after" insert="true" update="false" query="false">
+    <description>Sends notification to library staff when new incident is created</description>
+    <active>true</active>
+    <priority>200</priority>
+    <script><![CDATA[
+(function executeRule(current, previous) {
+    try {
+        // Queue notification event
+        var eventName = 'x_1997678_acad_resolve.incident_created';
+        gs.eventQueue(eventName, current.sys_id, '');
+        
+        // Also trigger email notification
+        gs.log('Incident created notification queued for: ' + current.number, 'IncidentNotification');
+    } catch (error) {
+        gs.error('Error sending notification: ' + error.message, 'NotificationError');
+    }
+})(current, previous);
+    ]]></script>
+  </business_rule>
+
+  <!-- BUSINESS RULE 3: Update Status on Payment -->
+  <business_rule name="Close Incident on Payment" table="x_1997678_acad_resolve_book_incident" 
+                  when="before" insert="false" update="true" query="false">
+    <description>Automatically closes incident when payment is recorded</description>
+    <active>true</active>
+    <priority>150</priority>
+    <script><![CDATA[
+(function executeRule(current, previous) {
+    try {
+        // If state changed to 'paid' or 'replaced', set resolution date
+        if (current.state.changed() && (current.state == 'paid' || current.state == 'replaced')) {
+            current.resolved_date = gs.now();
+            current.resolution_method = current.state == 'paid' ? 'Payment' : 'Replacement';
+            
+            // Trigger resolution notification
+            gs.eventQueue('x_1997678_acad_resolve.incident_resolved', current.sys_id, '');
+            
+            gs.log('Incident ' + current.number + ' resolved via: ' + current.resolution_method, 'IncidentResolution');
+        }
+    } catch (error) {
+        gs.error('Error updating incident status: ' + error.message, 'StatusUpdateError');
+    }
+})(current, previous);
+    ]]></script>
+  </business_rule>
+
+  <!-- BUSINESS RULE 4: Validate Incident Data -->
+  <business_rule name="Validate Incident Data" table="x_1997678_acad_resolve_book_incident" 
+                  when="before" insert="true" update="true" query="false">
+    <description>Validates required incident fields before saving</description>
+    <active>true</active>
+    <priority>50</priority>
+    <script><![CDATA[
+(function executeRule(current, previous) {
+    try {
+        // Validate required fields
+        if (!current.student_id) {
+            gs.addErrorMessage('Student ID is required');
+            current.setAbortAction(true);
+            return;
+        }
+        
+        if (!current.book_title) {
+            gs.addErrorMessage('Book title is required');
+            current.setAbortAction(true);
+            return;
+        }
+        
+        if (!current.damage_type) {
+            gs.addErrorMessage('Damage type must be specified');
+            current.setAbortAction(true);
+            return;
+        }
+        
+        // Validate book value is positive
+        if (current.book_value && parseFloat(current.book_value) <= 0) {
+            gs.addErrorMessage('Book value must be greater than zero');
+            current.setAbortAction(true);
+            return;
+        }
+        
+    } catch (error) {
+        gs.error('Validation error: ' + error.message, 'DataValidation');
+    }
+})(current, previous);
+    ]]></script>
+  </business_rule>
+
+  <!-- BUSINESS RULE 5: Auto-Assign Priority Based on Damage Level -->
+  <business_rule name="Set Priority by Damage" table="x_1997678_acad_resolve_book_incident" 
+                  when="before" insert="true" update="true" query="false">
+    <description>Sets incident priority based on damage level and book value</description>
+    <active>true</active>
+    <priority>75</priority>
+    <script><![CDATA[
+(function executeRule(current, previous) {
+    try {
+        var priority = '3'; // Default: low
+        var bookValue = parseFloat(current.book_value) || 0;
+        
+        if (current.damage_level == 'high' || bookValue > 150) {
+            priority = '1'; // High priority
+        } else if (current.damage_level == 'medium' || bookValue > 75) {
+            priority = '2'; // Medium priority
+        }
+        
+        current.priority = priority;
+        
+    } catch (error) {
+        gs.error('Error setting priority: ' + error.message, 'PriorityError');
+    }
+})(current, previous);
+    ]]></script>
+  </business_rule>
+
+</export_set>

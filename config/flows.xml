@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export_set application="Academic Resolve" version="1.0.0">
+
+  <!-- FLOW 1: Incident Intake Flow -->
+  <flow name="Incident Intake Flow" 
+         description="Captures and categorizes incident from student submission"
+         active="true">
+    
+    <trigger type="record" table="x_1997678_acad_resolve_book_incident" operation="insert"/>
+    
+    <steps>
+      <step id="step_1" type="trigger">
+        <name>Incident Created</name>
+        <description>Student submits new incident report</description>
+      </step>
+
+      <step id="step_2" type="action" next="step_3">
+        <name>Validate Student Data</name>
+        <action type="script">
+          <script><![CDATA[
+// Validate student exists in LMS
+var student = new GlideRecord('sys_user');
+student.addQuery('user_name', trigger.student_id);
+student.query();
+
+if (!student.next()) {
+  throw new Error('Student not found in system');
+}
+
+var isActive = student.active == true;
+if (!isActive) {
+  throw new Error('Student account is inactive');
+}
+
+flow_context.student_verified = true;
+          ]]></script>
+        </action>
+      </step>
+
+      <step id="step_3" type="decision" condition="flow_context.student_verified">
+        <name>Student Verified?</name>
+        <yes_next>step_4</yes_next>
+        <no_next>step_error</no_next>
+      </step>
+
+      <step id="step_4" type="action" next="step_5">
+        <name>Assign Reference Number</name>
+        <action type="update_record">
+          <record_id>${trigger.sys_id}</record_id>
+          <updates>
+            <number>AUTO_GENERATED</number>
+            <state>open</state>
+            <created_by>Student Portal</created_by>
+          </updates>
+        </action>
+      </step>
+
+      <step id="step_5" type="action" next="step_6">
+        <name>Calculate Initial Fee</name>
+        <action type="script">
+          <script><![CDATA[
+// Call business rule to calculate fee
+var incident = new GlideRecord('x_1997678_acad_resolve_book_incident');
+incident.get(trigger.sys_id);
+
+var feeSchedule = new GlideRecord('x_1997678_acad_resolve_fee_schedule');
+feeSchedule.addQuery('damage_type', incident.damage_type);
+feeSchedule.addQuery('damage_level', incident.damage_level);
+feeSchedule.query();
+
+if (feeSchedule.next()) {
+  var baseValue = parseFloat(incident.book_value);
+  var feePercent = parseFloat(feeSchedule.fee_percentage);
+  var calculatedFee = baseValue * (feePercent / 100);
+  
+  flow_context.calculated_fee = calculatedFee.toFixed(2);
+} else {
+  flow_context.calculated_fee = incident.book_value;
+}
+
+gs.log('Fee calculated: $' + flow_context.calculated_fee, 'FlowFeeCalculation');
+          ]]></script>
+        </action>
+      </step>
+
+      <step id="step_6" type="action" next="step_7">
+        <name>Send Confirmation Email</name>
+        <action type="send_event">
+          <event_name>x_1997678_acad_resolve.incident_created</event_name>
+          <record_id>${trigger.sys_id}</record_id>
+        </action>
+      </step>
+
+      <step id="step_7" type="action" next="step_end">
+        <name>Log to Analytics</name>
+        <action type="script">
+          <script><![CDATA[
+// Send to analytics
+var event = {
+  event_type: 'incident_created',
+  timestamp: gs.now(),
+  incident_id: trigger.sys_id,
+  damage_type: trigger.damage_type,
+  fee_amount: flow_context.calculated_fee
+};
+
+gs.log('Analytics event: ' + JSON.stringify(event), 'IncidentAnalytics');
+          ]]></script>
+        </action>
+      </step>
+
+      <step id="step_error" type="action" next="step_end">
+        <name>Handle Validation Error</name>
+        <action type="update_record">
+          <record_id>${trigger.sys_id}</record_id>
+          <updates>
+            <state>error</state>
+            <error_message>Student verification failed</error_message>
+          </updates>
+        </action>
+      </step>
+
+      <step id="step_end" type="end">
+        <name>Incident Intake Complete</name>
+      </step>
+    </steps>
+  </flow>
+
+  <!-- FLOW 2: Approval Workflow -->
+  <flow name="Incident Approval Workflow"
+         description="Routes approval requests to library staff and managers"
+         active="true">
+    
+    <trigger type="action" trigger_name="send_for_approval"/>
+    
+    <steps>
+      <step id="approval_1" type="trigger">
+        <name>Approval Requested</name>
+      </step>
+
+      <step id="approval_2" type="action" next="approval_3">
+        <name>Create Approval Record</name>
+        <action type="script">
+          <script><![CDATA[
+var approval = new GlideRecord('x_1997678_acad_resolve_approval');
+approval.newRecord();
+approval.incident_id = trigger.sys_id;
+approval.approver_role = 'acad_resolve.approver';
+approval.approval_status = 'pending';
+approval.created_date = gs.now();
+approval.due_date = new GlideDateTime().addDays(1).toString();
+
+var approvalId = approval.insert();
+flow_context.approval_id = approvalId;
+          ]]></script>
+        </action>
+      </step>
+
+      <step id="approval_3" type="action" next="approval_4">
+        <name>Assign to Manager</name>
+        <action type="assignment">
+          <assign_to_role>acad_resolve.approver</assign_to_role>
+          <record_id>flow_context.approval_id</record_id>
+        </action>
+      </step>
+
+      <step id="approval_4" type="action" next="approval_5">
+        <name>Send Approval Request Email</name>
+        <action type="send_event">
+          <event_name>x_1997678_acad_resolve.approval_requested</event_name>
+          <record_id>${trigger.sys_id}</record_id>
+        </action>
+      </step>
+
+      <step id="approval_5" type="action" next="approval_6">
+        <name>Wait for Approval Decision</name>
+        <action type="wait">
+          <wait_type>record_update</wait_type>
+          <record_id>flow_context.approval_id</record_id>
+          <field>approval_status</field>
+          <timeout>86400</timeout>
+        </action>
+      </step>
+
+      <step id="approval_6" type="decision" condition="flow_context.approval_decision == 'approved'">
+        <name>Approval Decision</name>
+        <yes_next>approval_7a</yes_next>
+        <no_next>approval_7b</no_next>
+      </step>
+
+      <step id="approval_7a" type="action" next="approval_end">
+        <name>Approve Incident</name>
+        <action type="update_record">
+          <record_id>${trigger.sys_id}</record_id>
+          <updates>
+            <state>replacement_approved</state>
+            <approval_date>${gs.now()}</approval_date>
+          </updates>
+        </action>
+      </step>
+
+      <step id="approval_7b" type="action" next="approval_end">
+        <name>Reject Incident</name>
+        <action type="update_record">
+          <record_id>${trigger.sys_id}</record_id>
+          <updates>
+            <state>rejected</state>
+            <rejection_date>${gs.now()}</rejection_date>
+          </updates>
+        </action>
+      </step>
+
+      <step id="approval_end" type="end">
+        <name>Approval Workflow Complete</name>
+      </step>
+    </steps>
+  </flow>
+
+  <!-- FLOW 3: Payment Processing Flow -->
+  <flow name="Payment Processing Flow"
+         description="Handles payment collection and incident resolution"
+         active="true">
+    
+    <trigger type="action" trigger_name="initiate_payment"/>
+    
+    <steps>
+      <step id="payment_1" type="trigger">
+        <name>Payment Initiated</name>
+      </step>
+
+      <step id="payment_2" type="action" next="payment_3">
+        <name>Call Payment Gateway</name>
+        <action type="integration">
+          <integration_name>Payment Gateway Connector</integration_name>
+          <params>
+            <amount>${trigger.calculated_fee}</amount>
+            <student_id>${trigger.student_id}</student_id>
+            <incident_id>${trigger.sys_id}</incident_id>
+          </params>
+        </action>
+      </step>
+
+      <step id="payment_3" type="decision" condition="payment_2.success">
+        <name>Payment Successful?</name>
+        <yes_next>payment_4a</yes_next>
+        <no_next>payment_4b</no_next>
+      </step>
+
+      <step id="payment_4a" type="action" next="payment_5a">
+        <name>Record Payment</name>
+        <action type="update_record">
+          <record_id>${trigger.sys_id}</record_id>
+          <updates>
+            <state>paid</state>
+            <payment_date>${gs.now()}</payment_date>
+            <transaction_id>${payment_2.transaction_id}</transaction_id>
+          </updates>
+        </action>
+      </step>
+
+      <step id="payment_5a" type="action" next="payment_6a">
+        <name>Send Payment Confirmation</name>
+        <action type="send_event">
+          <event_name>x_1997678_acad_resolve.payment_received</event_name>
+          <record_id>${trigger.sys_id}</record_id>
+        </action>
+      </step>
+
+      <step id="payment_6a" type="action" next="payment_end">
+        <name>Close Incident</name>
+        <action type="update_record">
+          <record_id>${trigger.sys_id}</record_id>
+          <updates>
+            <resolved_date>${gs.now()}</resolved_date>
+          </updates>
+        </action>
+      </step>
+
+      <step id="payment_4b" type="action" next="payment_5b">
+        <name>Payment Failed</name>
+        <action type="update_record">
+          <record_id>${trigger.sys_id}</record_id>
+          <updates>
+            <payment_status>failed</payment_status>
+            <payment_error>${payment_2.error_message}</payment_error>
+          </updates>
+        </action>
+      </step>
+
+      <step id="payment_5b" type="action" next="payment_end">
+        <name>Notify Student of Failure</name>
+        <action type="send_event">
+          <event_name>x_1997678_acad_resolve.payment_failed</event_name>
+          <record_id>${trigger.sys_id}</record_id>
+        </action>
+      </step>
+
+      <step id="payment_end" type="end">
+        <name>Payment Processing Complete</name>
+      </step>
+    </steps>
+  </flow>
+
+  <!-- FLOW 4: Escalation Flow -->
+  <flow name="Incident Escalation Flow"
+         description="Escalates unresolved incidents to management"
+         active="true">
+    
+    <trigger type="schedule" cron="0 8 * * 1"/>
+    
+    <steps>
+      <step id="escalation_1" type="trigger">
+        <name>Daily Escalation Check</name>
+      </step>
+
+      <step id="escalation_2" type="action" next="escalation_3">
+        <name>Find Unresolved Incidents</name>
+        <action type="script">
+          <script><![CDATA[
+// Find incidents open for more than 7 days
+var incidents = new GlideQuery('x_1997678_acad_resolve_book_incident');
+incidents.where('state', 'open');
+incidents.where('sys_created_on', '<', new GlideDateTime().addDays(-7));
+incidents.select();
+
+var unresolved = [];
+for (var incident of incidents) {
+  unresolved.push(incident.sys_id);
+}
+
+flow_context.unresolved_count = unresolved.length;
+flow_context.incidents = unresolved;
+          ]]></script>
+        </action>
+      </step>
+
+      <step id="escalation_3" type="decision" condition="flow_context.unresolved_count > 0">
+        <name>Any Unresolved?</name>
+        <yes_next>escalation_4</yes_next>
+        <no_next>escalation_end</no_next>
+      </step>
+
+      <step id="escalation_4" type="action" next="escalation_5">
+        <name>Assign to Manager</name>
+        <action type="script">
+          <script><![CDATA[
+for (var incident_id of flow_context.incidents) {
+  var incident = new GlideRecord('x_1997678_acad_resolve_book_incident');
+  incident.get(incident_id);
+  incident.assigned_to = getManagerUser();
+  incident.priority = '1';
+  incident.update();
+}
+          ]]></script>
+        </action>
+      </step>
+
+      <step id="escalation_5" type="action" next="escalation_end">
+        <name>Send Escalation Notification</name>
+        <action type="send_event">
+          <event_name>x_1997678_acad_resolve.incident_escalated</event_name>
+        </action>
+      </step>
+
+      <step id="escalation_end" type="end">
+        <name>Escalation Check Complete</name>
+      </step>
+    </steps>
+  </flow>
+
+</export_set>

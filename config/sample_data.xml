@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export_set application="Academic Resolve" version="1.0.0">
+  
+  <!-- SAMPLE DATA: Fee Schedule -->
+  <fee_schedule_data>
+    <record>
+      <damage_type>lost</damage_type>
+      <damage_level></damage_level>
+      <fee_percentage>100</fee_percentage>
+      <fee_type>replacement_cost</fee_type>
+      <description>Complete loss of book - full replacement cost</description>
+      <active>true</active>
+    </record>
+
+    <record>
+      <damage_type>water_damage</damage_type>
+      <damage_level>light</damage_level>
+      <fee_percentage>25</fee_percentage>
+      <fee_type>percentage</fee_type>
+      <description>Minor water damage - 25% of book value</description>
+      <active>true</active>
+    </record>
+
+    <record>
+      <damage_type>water_damage</damage_type>
+      <damage_level>medium</damage_level>
+      <fee_percentage>50</fee_percentage>
+      <fee_type>percentage</fee_type>
+      <description>Moderate water damage - 50% of book value</description>
+      <active>true</active>
+    </record>
+
+    <record>
+      <damage_type>water_damage</damage_type>
+      <damage_level>high</damage_level>
+      <fee_percentage>100</fee_percentage>
+      <fee_type>replacement_cost</fee_type>
+      <description>Severe water damage - full replacement</description>
+      <active>true</active>
+    </record>
+
+    <record>
+      <damage_type>physical_damage</damage_type>
+      <damage_level>light</damage_level>
+      <fee_percentage>20</fee_percentage>
+      <fee_type>percentage</fee_type>
+      <description>Minor physical damage - 20% of book value</description>
+      <active>true</active>
+    </record>
+
+    <record>
+      <damage_type>physical_damage</damage_type>
+      <damage_level>medium</damage_level>
+      <fee_percentage>40</fee_percentage>
+      <fee_type>percentage</fee_type>
+      <description>Moderate physical damage - 40% of book value</description>
+      <active>true</active>
+    </record>
+
+    <record>
+      <damage_type>physical_damage</damage_type>
+      <damage_level>high</damage_level>
+      <fee_percentage>80</fee_percentage>
+      <fee_type>percentage</fee_type>
+      <description>Severe physical damage - 80% of book value</description>
+      <active>true</active>
+    </record>
+
+    <record>
+      <damage_type>tear</damage_type>
+      <damage_level>light</damage_level>
+      <fee_percentage>15</fee_percentage>
+      <fee_type>percentage</fee_type>
+      <description>Minor tears - 15% of book value</description>
+      <active>true</active>
+    </record>
+
+    <record>
+      <damage_type>tear</damage_type>
+      <damage_level>medium</damage_level>
+      <fee_percentage>35</fee_percentage>
+      <fee_type>percentage</fee_type>
+      <description>Multiple tears - 35% of book value</description>
+      <active>true</active>
+    </record>
+
+    <record>
+      <damage_type>tear</damage_type>
+      <damage_level>high</damage_level>
+      <fee_percentage>75</fee_percentage>
+      <fee_type>percentage</fee_type>
+      <description>Severe tearing - 75% of book value</description>
+      <active>true</active>
+    </record>
+
+    <record>
+      <damage_type>mold</damage_type>
+      <damage_level>light</damage_level>
+      <fee_percentage>30</fee_percentage>
+      <fee_type>percentage</fee_type>
+      <description>Minor mold/mildew - 30% of book value</description>
+      <active>true</active>
+    </record>
+
+    <record>
+      <damage_type>mold</damage_type>
+      <damage_level>medium</damage_level>
+      <fee_percentage>60</fee_percentage>
+      <fee_type>percentage</fee_type>
+      <description>Moderate mold/mildew - 60% of book value</description>
+      <active>true</active>
+    </record>
+
+    <record>
+      <damage_type>mold</damage_type>
+      <damage_level>high</damage_level>
+      <fee_percentage>100</fee_percentage>
+      <fee_type>replacement_cost</fee_type>
+      <description>Severe mold/mildew - full replacement</description>
+      <active>true</active>
+    </record>
+
+    <record>
+      <damage_type>missing_pages</damage_type>
+      <damage_level>light</damage_level>
+      <fee_percentage>20</fee_percentage>
+      <fee_type>percentage</fee_type>
+      <description>1-5 missing pages - 20% of book value</description>
+      <active>true</active>
+    </record>
+
+    <record>
+      <damage_type>missing_pages</damage_type>
+      <damage_level>medium</damage_level>
+      <fee_percentage>50</fee_percentage>
+      <fee_type>percentage</fee_type>
+      <description>6-20 missing pages - 50% of book value</description>
+      <active>true</active>
+    </record>
+
+    <record>
+      <damage_type>missing_pages</damage_type>
+      <damage_level>high</damage_level>
+      <fee_percentage>100</fee_percentage>
+      <fee_type>replacement_cost</fee_type>
+      <description>More than 20 missing pages - full replacement</description>
+      <active>true</active>
+    </record>
+
+    <record>
+      <damage_type>other</damage_type>
+      <damage_level>light</damage_level>
+      <fee_percentage>20</fee_percentage>
+      <fee_type>percentage</fee_type>
+      <description>Other minor damage - 20% of book value</description>
+      <active>true</active>
+    </record>
+
+    <record>
+      <damage_type>other</damage_type>
+      <damage_level>medium</damage_level>
+      <fee_percentage>50</fee_percentage>
+      <fee_type>percentage</fee_type>
+      <description>Other moderate damage - 50% of book value</description>
+      <active>true</active>
+    </record>
+
+    <record>
+      <damage_type>other</damage_type>
+      <damage_level>high</damage_level>
+      <fee_percentage>100</fee_percentage>
+      <fee_type>replacement_cost</fee_type>
+      <description>Other severe damage - full replacement</description>
+      <active>true</active>
+    </record>
+  </fee_schedule_data>
+
+  <!-- SAMPLE DATA: Test Users -->
+  <user_data>
+    <record user_type="student">
+      <first_name>John</first_name>
+      <last_name>Student</last_name>
+      <email>john.student@university.edu</email>
+      <user_name>john.student</user_name>
+      <roles>acad_resolve.student,basic</roles>
+    </record>
+
+    <record user_type="library_staff">
+      <first_name>Sarah</first_name>
+      <last_name>Librarian</last_name>
+      <email>sarah.librarian@university.edu</email>
+      <user_name>sarah.librarian</user_name>
+      <roles>acad_resolve.library_staff,basic</roles>
+    </record>
+
+    <record user_type="approver">
+      <first_name>Michael</first_name>
+      <last_name>Manager</last_name>
+      <email>michael.manager@university.edu</email>
+      <user_name>michael.manager</user_name>
+      <roles>acad_resolve.approver,acad_resolve.library_staff,basic</roles>
+    </record>
+
+    <record user_type="admin">
+      <first_name>Admin</first_name>
+      <last_name>User</last_name>
+      <email>admin@university.edu</email>
+      <user_name>admin.acad</user_name>
+      <roles>acad_resolve.admin,admin,basic</roles>
+    </record>
+  </user_data>
+
+  <!-- SAMPLE DATA: Test Incidents -->
+  <incident_data>
+    <record>
+      <student_id>john.student</student_id>
+      <book_title>Introduction to Computer Science</book_title>
+      <book_isbn>978-0-13-110362-7</book_isbn>
+      <book_value>99.99</book_value>
+      <author>David J. Eck</author>
+      <damage_type>water_damage</damage_type>
+      <damage_level>medium</damage_level>
+      <incident_date>2024-01-10</incident_date>
+      <description>Book was accidentally dropped in a puddle during heavy rain. Pages are damp and some ink has run. Cover is warped.</description>
+      <state>open</state>
+      <priority>2</priority>
+    </record>
+
+    <record>
+      <student_id>john.student</student_id>
+      <book_title>Modern Physics</book_title>
+      <book_isbn>978-0-534-49340-7</book_isbn>
+      <book_value>149.99</book_value>
+      <author>Paul A. Tipler, Ralph A. Llewellyn</author>
+      <damage_type>physical_damage</damage_type>
+      <damage_level>high</damage_level>
+      <incident_date>2024-01-12</incident_date>
+      <description>Book suffered damage from being sat on. Spine is broken, pages are creased. Front cover is detached.</description>
+      <state>pending_approval</state>
+      <priority>1</priority>
+    </record>
+
+    <record>
+      <student_id>john.student</student_id>
+      <book_title>Calculus: Early Transcendentals</book_title>
+      <book_isbn>978-1-285-74155-0</book_isbn>
+      <book_value>179.99</book_value>
+      <author>James Stewart</author>
+      <damage_type>lost</damage_type>
+      <damage_level>replacement</damage_level>
+      <incident_date>2024-01-15</incident_date>
+      <description>Book was lost in the library. Last seen in the math section on January 14th. Not recovered despite search.</description>
+      <state>open</state>
+      <priority>1</priority>
+    </record>
+
+    <record>
+      <student_id>john.student</student_id>
+      <book_title>Discrete Mathematics and Its Applications</book_title>
+      <book_isbn>978-0-07-338309-7</book_isbn>
+      <book_value>129.99</book_value>
+      <author>Kenneth H. Rosen</author>
+      <damage_type>tear</damage_type>
+      <damage_level>medium</damage_level>
+      <incident_date>2024-01-08</incident_date>
+      <description>Multiple pages have tears, approximately 15 pages affected. Some pages are partially detached.</description>
+      <state>paid</state>
+      <priority>2</priority>
+    </record>
+  </incident_data>
+
+  <!-- SAMPLE DATA: Notifications Template -->
+  <notification_templates>
+    <template name="welcome_email">
+      <subject>Welcome to Academic Resolve</subject>
+      <body>
+Hello,
+
+Welcome to the Academic Resolve system. If you have any questions about reporting or resolving book disputes, please visit our Help & FAQ section or contact the library.
+
+Best regards,
+Academic Library Team
+      </body>
+    </template>
+
+    <template name="reminder_email">
+      <subject>Pending Action Required - Book Dispute #${incident.number}</subject>
+      <body>
+Hello,
+
+This is a reminder that you have a pending action on incident #${incident.number}.
+
+Book: ${incident.book_title}
+Status: ${incident.state}
+Amount: $${incident.calculated_fee}
+
+Please complete your action within the next 24 hours.
+
+View Incident: ${incident.url}
+
+Best regards,
+Academic Library Team
+      </body>
+    </template>
+  </notification_templates>
+
+</export_set>

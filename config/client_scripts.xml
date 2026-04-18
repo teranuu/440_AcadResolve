@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export_set application="Academic Resolve" version="1.0.0">
+
+  <!-- CLIENT SCRIPT 1: Form Validation -->
+  <client_script name="Validate Incident Form" table="x_1997678_acad_resolve_book_incident" 
+                   type="onSubmit">
+    <description>Validates form before submission to server</description>
+    <active>true</active>
+    <script><![CDATA[
+function onSubmit() {
+    try {
+        var gr = g_form;
+        
+        // Validate student ID
+        if (!gr.getValue('student_id')) {
+            gr.addErrorMessage('Please enter your student ID');
+            return false;
+        }
+        
+        // Validate book title
+        if (!gr.getValue('book_title') || gr.getValue('book_title').trim() === '') {
+            gr.addErrorMessage('Please enter the book title');
+            return false;
+        }
+        
+        // Validate damage type
+        if (!gr.getValue('damage_type')) {
+            gr.addErrorMessage('Please select a damage type');
+            return false;
+        }
+        
+        // Validate damage level
+        if (!gr.getValue('damage_level')) {
+            gr.addErrorMessage('Please specify the damage level');
+            return false;
+        }
+        
+        // Validate book value
+        var bookValue = parseFloat(gr.getValue('book_value'));
+        if (!bookValue || bookValue <= 0) {
+            gr.addErrorMessage('Book value must be greater than zero');
+            return false;
+        }
+        
+        // Validate description
+        if (!gr.getValue('description') || gr.getValue('description').trim().length < 10) {
+            gr.addErrorMessage('Please provide a detailed description (at least 10 characters)');
+            return false;
+        }
+        
+        // Validate incident date
+        if (!gr.getValue('incident_date')) {
+            gr.addErrorMessage('Please specify when the incident occurred');
+            return false;
+        }
+        
+        return true;
+        
+    } catch (e) {
+        console.error('Form validation error: ' + e.message);
+        return false;
+    }
+}
+    ]]></script>
+  </client_script>
+
+  <!-- CLIENT SCRIPT 2: Real-time Fee Calculation -->
+  <client_script name="Calculate Fee Preview" table="x_1997678_acad_resolve_book_incident" 
+                   type="onChange" field="damage_level,book_value">
+    <description>Updates fee preview when damage level or book value changes</description>
+    <active>true</active>
+    <script><![CDATA[
+function onChange(control, oldValue, newValue, isLoading, isTemplate) {
+    try {
+        if (isLoading || newValue === oldValue) return;
+        
+        var gr = g_form;
+        var damageLevel = gr.getValue('damage_level');
+        var bookValue = parseFloat(gr.getValue('book_value')) || 0;
+        
+        if (!damageLevel || bookValue <= 0) return;
+        
+        // Call server to calculate fee
+        var ga = new GlideAjax('x_1997678_acad_resolve.CalculateFeeAjax');
+        ga.addParam('sysparm_name', 'calculateFee');
+        ga.addParam('sysparm_damage_level', damageLevel);
+        ga.addParam('sysparm_book_value', bookValue);
+        
+        ga.getXMLAnswer(function(answer) {
+            if (answer && answer.fee) {
+                gr.setValue('calculated_fee', answer.fee);
+                gr.clearMessage();
+                gr.addMessage('Estimated fee: $' + answer.fee);
+            }
+        });
+        
+    } catch (e) {
+        console.error('Fee calculation error: ' + e.message);
+    }
+}
+    ]]></script>
+  </client_script>
+
+  <!-- CLIENT SCRIPT 3: Dynamic Field Display -->
+  <client_script name="Show/Hide Fields Based on Type" table="x_1997678_acad_resolve_book_incident" 
+                   type="onChange" field="damage_type">
+    <description>Shows/hides relevant fields based on damage type selection</description>
+    <active>true</active>
+    <script><![CDATA[
+function onChange(control, oldValue, newValue, isLoading, isTemplate) {
+    try {
+        if (isLoading || newValue === oldValue) return;
+        
+        var gr = g_form;
+        
+        // Show/hide fields based on damage type
+        switch(newValue) {
+            case 'water_damage':
+            case 'mold':
+                gr.setVisible('moisture_date', true);
+                gr.setVisible('weather_condition', true);
+                break;
+                
+            case 'physical_damage':
+            case 'tear':
+                gr.setVisible('damage_location', true);
+                break;
+                
+            case 'lost':
+                gr.setVisible('last_seen_date', true);
+                gr.setVisible('last_seen_location', true);
+                gr.setMandatory('resolution_method', true);
+                break;
+                
+            default:
+                gr.setVisible('moisture_date', false);
+                gr.setVisible('weather_condition', false);
+                gr.setVisible('damage_location', false);
+                gr.setVisible('last_seen_date', false);
+                gr.setVisible('last_seen_location', false);
+        }
+        
+    } catch (e) {
+        console.error('Field visibility error: ' + e.message);
+    }
+}
+    ]]></script>
+  </client_script>
+
+  <!-- CLIENT SCRIPT 4: Permission Checker -->
+  <client_script name="Check User Permissions" table="x_1997678_acad_resolve_book_incident" 
+                   type="onLoad">
+    <description>Checks user role and enables/disables fields accordingly</description>
+    <active>true</active>
+    <script><![CDATA[
+function onLoad() {
+    try {
+        var gr = g_form;
+        var user = new GlideUser();
+        
+        // Check if user is library staff
+        var isLibraryStaff = user.hasRole('acad_resolve.library_staff') || 
+                            user.hasRole('acad_resolve.admin');
+        
+        // Disable approval fields for students
+        if (!isLibraryStaff) {
+            gr.setReadonly('approval_status', true);
+            gr.setReadonly('approver_notes', true);
+            gr.setReadonly('fee_waiver_approved', true);
+        }
+        
+        // Check if user is creator or admin
+        var isCreator = gr.getValue('caller_id') === user.getID();
+        if (!isCreator && !user.hasRole('acad_resolve.admin')) {
+            gr.setReadonly('student_id', true);
+            gr.setReadonly('description', true);
+        }
+        
+        // Enable edit button only for authorized users
+        if (gr.isNewRecord() && !user.hasRole('acad_resolve.student')) {
+            gr.addErrorMessage('Only students can create dispute reports');
+        }
+        
+    } catch (e) {
+        console.error('Permission check error: ' + e.message);
+    }
+}
+    ]]></script>
+  </client_script>
+
+  <!-- CLIENT SCRIPT 5: Photo Upload Handler -->
+  <client_script name="Handle Photo Upload" table="x_1997678_acad_resolve_book_incident" 
+                   type="onLoad">
+    <description>Manages photo attachment uploads and validation</description>
+    <active>true</active>
+    <script><![CDATA[
+function onLoad() {
+    try {
+        // Add custom event listener for attachments
+        var attachmentContainer = document.getElementById('sys_attachment.x_1997678_acad_resolve_book_incident');
+        
+        if (attachmentContainer) {
+            // Monitor file uploads
+            var fileInputs = attachmentContainer.querySelectorAll('input[type="file"]');
+            
+            fileInputs.forEach(function(input) {
+                input.addEventListener('change', function(e) {
+                    var file = e.target.files[0];
+                    
+                    if (file) {
+                        // Validate file type (images only)
+                        var allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                        if (!allowedTypes.includes(file.type)) {
+                            alert('Please upload an image file (JPEG, PNG, GIF, or WebP)');
+                            e.target.value = '';
+                            return;
+                        }
+                        
+                        // Validate file size (max 5MB)
+                        if (file.size > 5 * 1024 * 1024) {
+                            alert('File size exceeds 5MB limit. Please compress and try again.');
+                            e.target.value = '';
+                            return;
+                        }
+                        
+                        // Set upload hint
+                        var hint = document.createElement('div');
+                        hint.className = 'info';
+                        hint.textContent = 'Photo: ' + file.name + ' (' + 
+                                        (file.size / 1024).toFixed(2) + ' KB)';
+                        attachmentContainer.appendChild(hint);
+                    }
+                });
+            });
+        }
+        
+    } catch (e) {
+        console.error('Photo upload handler error: ' + e.message);
+    }
+}
+    ]]></script>
+  </client_script>
+
+</export_set>
