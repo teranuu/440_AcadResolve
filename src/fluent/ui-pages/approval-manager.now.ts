@@ -10,7 +10,7 @@ UiPage({
     endpoint: 'x_1997678_acadreso_approval_manager.do',
     description: 'Academic Resolve - Approval Manager',
     category: 'general',
-    html: `
+    html: String.raw`
 <!DOCTYPE html>
 <html>
 <head>
@@ -170,18 +170,18 @@ UiPage({
                     if (data.approvals) {
                         const tbody = document.getElementById('pending-tbody');
                         if (data.approvals.length > 0) {
-                            tbody.innerHTML = data.approvals.map(a => \`
-                                <tr>
-                                    <td><strong>\${a.incident_number}</strong></td>
-                                    <td>\${a.student_id}</td>
-                                    <td>\${a.book_title}</td>
-                                    <td>\$\${parseFloat(a.fee).toFixed(2)}</td>
-                                    <td>\${new Date(a.submitted_date).toLocaleDateString()}</td>
-                                    <td>
-                                        <button class="btn btn-primary" onclick="openApprovalModal('\${a.incident_id}')">Review</button>
-                                    </td>
-                                </tr>
-                            \`).join('');
+                            let html = '';
+                            for (let i = 0; i < data.approvals.length; i++) {
+                                const a = data.approvals[i];
+                                html += '<tr><td><strong>' + a.incident_number + '</strong></td>';
+                                html += '<td>' + a.student_id + '</td>';
+                                html += '<td>' + a.book_title + '</td>';
+                                html += '<td>$' + parseFloat(a.fee).toFixed(2) + '</td>';
+                                html += '<td>' + new Date(a.submitted_date).toLocaleDateString() + '</td>';
+                                html += '<td><button class="btn btn-primary" onclick="openApprovalModal(\'' + a.incident_id + '\')">Review</button></td>';
+                                html += '</tr>';
+                            }
+                            tbody.innerHTML = html;
                         }
                     }
                 })
@@ -203,15 +203,14 @@ UiPage({
             fetch('/api/acadresolve/incidents/' + incidentId)
                 .then(r => r.json())
                 .then(data => {
-                    document.getElementById('incident-details').innerHTML = \`
-                        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
-                            <p><strong>Incident:</strong> \${data.number}</p>
-                            <p><strong>Student:</strong> \${data.student_id}</p>
-                            <p><strong>Book:</strong> \${data.book_title}</p>
-                            <p><strong>Damage:</strong> \${data.damage_type} - \${data.damage_level}</p>
-                            <p><strong>Requested Fee:</strong> \$\${parseFloat(data.calculated_fee || 0).toFixed(2)}</p>
-                        </div>
-                    \`;
+                    let html = '<div style="background-color: #f5f5f5; padding: 15px; border-radius: 4px; margin-bottom: 20px;">';
+                    html += '<p><strong>Incident:</strong> ' + data.number + '</p>';
+                    html += '<p><strong>Student:</strong> ' + data.student_id + '</p>';
+                    html += '<p><strong>Book:</strong> ' + data.book_title + '</p>';
+                    html += '<p><strong>Damage:</strong> ' + data.damage_type + ' - ' + data.damage_level + '</p>';
+                    html += '<p><strong>Requested Fee:</strong> $' + parseFloat(data.calculated_fee || 0).toFixed(2) + '</p>';
+                    html += '</div>';
+                    document.getElementById('incident-details').innerHTML = html;
                     document.getElementById('approval-modal').classList.add('active');
                 })
                 .catch(err => console.error('Error loading incident:', err));

@@ -10,7 +10,7 @@ UiPage({
     endpoint: 'x_1997678_acadreso_incident_manager.do',
     description: 'Academic Resolve - Incident Response Manager',
     category: 'general',
-    html: `
+    html: String.raw`
 <!DOCTYPE html>
 <html>
 <head>
@@ -235,24 +235,23 @@ UiPage({
                     
                     if (data.incidents && data.incidents.length > 0) {
                         const tbody = document.getElementById('incidents-tbody');
-                        tbody.innerHTML = data.incidents.map(inc => \`
-                            <tr>
-                                <td><strong>\${inc.number || 'N/A'}</strong></td>
-                                <td>\${inc.student_id || '-'}</td>
-                                <td>\${inc.book_title || '-'}</td>
-                                <td>\${inc.damage_type || '-'}</td>
-                                <td>
-                                    <span class="status-badge status-\${(inc.state || 'open').toLowerCase()}">
-                                        \${inc.state || 'Open'}
-                                    </span>
-                                </td>
-                                <td>\$\${parseFloat(inc.calculated_fee || 0).toFixed(2)}</td>
-                                <td>\${inc.created_on ? new Date(inc.created_on).toLocaleDateString() : '-'}</td>
-                                <td>
-                                    <button class="btn btn-action btn-view" onclick="viewIncident('\${inc.sys_id}')">View</button>
-                                </td>
-                            </tr>
-                        \`).join('');
+                        let html = '';
+                        for (let i = 0; i < data.incidents.length; i++) {
+                            const inc = data.incidents[i];
+                            const status = (inc.state || 'open').toLowerCase();
+                            const state = inc.state || 'Open';
+                            const date = inc.created_on ? new Date(inc.created_on).toLocaleDateString() : '-';
+                            html += '<tr><td><strong>' + (inc.number || 'N/A') + '</strong></td>';
+                            html += '<td>' + (inc.student_id || '-') + '</td>';
+                            html += '<td>' + (inc.book_title || '-') + '</td>';
+                            html += '<td>' + (inc.damage_type || '-') + '</td>';
+                            html += '<td><span class="status-badge status-' + status + '">' + state + '</span></td>';
+                            html += '<td>$' + parseFloat(inc.calculated_fee || 0).toFixed(2) + '</td>';
+                            html += '<td>' + date + '</td>';
+                            html += '<td><button class="btn btn-action btn-view" onclick="viewIncident(\'' + inc.sys_id + '\')">View</button></td>';
+                            html += '</tr>';
+                        }
+                        tbody.innerHTML = html;
                         content.style.display = 'block';
                     } else {
                         document.getElementById('incidents-tbody').innerHTML = 
@@ -282,65 +281,64 @@ UiPage({
         }
 
         function displayIncidentDetail(inc) {
-            const detail = \`
-                <div class="detail-section">
-                    <h3>\${inc.number} - \${inc.book_title}</h3>
-                    <div class="detail-row">
-                        <div class="detail-label">Student:</div>
-                        <div class="detail-value">\${inc.student_id}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">Book ISBN:</div>
-                        <div class="detail-value">\${inc.book_isbn || '-'}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">Book Value:</div>
-                        <div class="detail-value">\$\${parseFloat(inc.book_value || 0).toFixed(2)}</div>
-                    </div>
-                </div>
+            let detail = '<div class="detail-section">';
+            detail += '<h3>' + inc.number + ' - ' + inc.book_title + '</h3>';
+            detail += '<div class="detail-row">';
+            detail += '<div class="detail-label">Student:</div>';
+            detail += '<div class="detail-value">' + inc.student_id + '</div>';
+            detail += '</div>';
+            detail += '<div class="detail-row">';
+            detail += '<div class="detail-label">Book ISBN:</div>';
+            detail += '<div class="detail-value">' + (inc.book_isbn || '-') + '</div>';
+            detail += '</div>';
+            detail += '<div class="detail-row">';
+            detail += '<div class="detail-label">Book Value:</div>';
+            detail += '<div class="detail-value">$' + parseFloat(inc.book_value || 0).toFixed(2) + '</div>';
+            detail += '</div>';
+            detail += '</div>';
 
-                <div class="detail-section">
-                    <h3>Incident Details</h3>
-                    <div class="detail-row">
-                        <div class="detail-label">Damage Type:</div>
-                        <div class="detail-value">\${inc.damage_type}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">Damage Level:</div>
-                        <div class="detail-value">\${inc.damage_level}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">Date:</div>
-                        <div class="detail-value">\${inc.incident_date || '-'}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">Description:</div>
-                        <div class="detail-value">\${inc.description || '-'}</div>
-                    </div>
-                </div>
+            detail += '<div class="detail-section">';
+            detail += '<h3>Incident Details</h3>';
+            detail += '<div class="detail-row">';
+            detail += '<div class="detail-label">Damage Type:</div>';
+            detail += '<div class="detail-value">' + inc.damage_type + '</div>';
+            detail += '</div>';
+            detail += '<div class="detail-row">';
+            detail += '<div class="detail-label">Damage Level:</div>';
+            detail += '<div class="detail-value">' + inc.damage_level + '</div>';
+            detail += '</div>';
+            detail += '<div class="detail-row">';
+            detail += '<div class="detail-label">Date:</div>';
+            detail += '<div class="detail-value">' + (inc.incident_date || '-') + '</div>';
+            detail += '</div>';
+            detail += '<div class="detail-row">';
+            detail += '<div class="detail-label">Description:</div>';
+            detail += '<div class="detail-value">' + (inc.description || '-') + '</div>';
+            detail += '</div>';
+            detail += '</div>';
 
-                <div class="detail-section">
-                    <h3>Fee Information</h3>
-                    <div class="fee-display">\$\${parseFloat(inc.calculated_fee || 0).toFixed(2)}</div>
-                </div>
+            detail += '<div class="detail-section">';
+            detail += '<h3>Fee Information</h3>';
+            detail += '<div class="fee-display">$' + parseFloat(inc.calculated_fee || 0).toFixed(2) + '</div>';
+            detail += '</div>';
 
-                <div class="detail-section">
-                    <h3>Status</h3>
-                    <div class="detail-row">
-                        <div class="detail-label">Current Status:</div>
-                        <div class="detail-value">
-                            <span class="status-badge status-\${(inc.state || 'open').toLowerCase()}">
-                                \${inc.state || 'Open'}
-                            </span>
-                        </div>
-                    </div>
-                </div>
+            detail += '<div class="detail-section">';
+            detail += '<h3>Status</h3>';
+            detail += '<div class="detail-row">';
+            detail += '<div class="detail-label">Current Status:</div>';
+            detail += '<div class="detail-value">';
+            const status = (inc.state || 'open').toLowerCase();
+            detail += '<span class="status-badge status-' + status + '">';
+            detail += (inc.state || 'Open');
+            detail += '</span>';
+            detail += '</div>';
+            detail += '</div>';
+            detail += '</div>';
 
-                <div class="action-buttons">
-                    <button class="btn btn-primary" onclick="showPaymentOption('\${inc.sys_id}')">💳 Make Payment</button>
-                    <button class="btn btn-secondary" onclick="requestApproval('\${inc.sys_id}')">✓ Request Approval</button>
-                </div>
-            \`;
+            detail += '<div class="action-buttons">';
+            detail += '<button class="btn btn-primary" onclick="showPaymentOption(\'' + inc.sys_id + '\')">💳 Make Payment</button>';
+            detail += '<button class="btn btn-secondary" onclick="requestApproval(\'' + inc.sys_id + '\')">✓ Request Approval</button>';
+            detail += '</div>';
             
             document.getElementById('detail-content').innerHTML = detail;
             document.getElementById('detail-view').style.display = 'block';
@@ -566,18 +564,21 @@ UiPage({
                     
                     if (data.incidents && data.incidents.length > 0) {
                         const tbody = document.getElementById('incidents-tbody');
-                        tbody.innerHTML = data.incidents.map(inc => \`
-                            <tr>
-                                <td><strong>\${inc.number || 'N/A'}</strong></td>
-                                <td>\${inc.student_id || '-'}</td>
-                                <td>\${inc.book_title || '-'}</td>
-                                <td>\${inc.damage_type || '-'}</td>
-                                <td><span class="status-badge status-\${(inc.state || 'open').toLowerCase()}">\${inc.state || 'Open'}</span></td>
-                                <td>\$\${parseFloat(inc.calculated_fee || 0).toFixed(2)}</td>
-                                <td>\${inc.created_on ? new Date(inc.created_on).toLocaleDateString() : '-'}</td>
-                                <td><button onclick="viewIncident('\${inc.sys_id}')" style="padding:4px 8px; font-size:12px;">View</button></td>
-                            </tr>
-                        \`).join('');
+                        let html = '';
+                        for (let i = 0; i < data.incidents.length; i++) {
+                            const inc = data.incidents[i];
+                            const status = inc.state || 'open';
+                            html += '<tr><td><strong>' + (inc.number || 'N/A') + '</strong></td>';
+                            html += '<td>' + (inc.student_id || '-') + '</td>';
+                            html += '<td>' + (inc.book_title || '-') + '</td>';
+                            html += '<td>' + (inc.damage_type || '-') + '</td>';
+                            html += '<td><span class="status-badge status-' + status.toLowerCase() + '">' + (inc.state || 'Open') + '</span></td>';
+                            html += '<td>$' + parseFloat(inc.calculated_fee || 0).toFixed(2) + '</td>';
+                            html += '<td>' + (inc.created_on ? new Date(inc.created_on).toLocaleDateString() : '-') + '</td>';
+                            html += '<td><button onclick="viewIncident(\'' + inc.sys_id + '\')" style="padding:4px 8px; font-size:12px;">View</button></td>';
+                            html += '</tr>';
+                        }
+                        tbody.innerHTML = html;
                         content.style.display = 'block';
                     } else {
                         document.getElementById('incidents-tbody').innerHTML = 

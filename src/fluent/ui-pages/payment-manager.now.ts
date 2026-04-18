@@ -10,7 +10,7 @@ UiPage({
     endpoint: 'x_1997678_acadreso_payment_manager.do',
     description: 'Academic Resolve - Payment Manager',
     category: 'general',
-    html: `
+    html: String.raw`
 <!DOCTYPE html>
 <html>
 <head>
@@ -161,22 +161,23 @@ UiPage({
                 .then(data => {
                     const tbody = document.getElementById('payments-tbody');
                     if (data.payments && data.payments.length > 0) {
-                        tbody.innerHTML = data.payments.map(p => \`
-                            <tr>
-                                <td><strong>\${p.incident_number}</strong></td>
-                                <td>\${p.student_id}</td>
-                                <td>\$\${parseFloat(p.amount).toFixed(2)}</td>
-                                <td>
-                                    <span class="status-badge status-\${(p.status || 'pending').toLowerCase()}">
-                                        \${p.status || 'Pending'}
-                                    </span>
-                                </td>
-                                <td>\${new Date(p.created_date).toLocaleDateString()}</td>
-                                <td>
-                                    \${p.status === 'pending' ? \`<button class="btn btn-primary" onclick="openPaymentModal('\${p.incident_id}', \${p.amount})">Pay Now</button>\` : '-'}
-                                </td>
-                            </tr>
-                        \`).join('');
+                        let html = '';
+                        for (let i = 0; i < data.payments.length; i++) {
+                            const p = data.payments[i];
+                            const status = (p.status || 'pending').toLowerCase();
+                            html += '<tr><td><strong>' + p.incident_number + '</strong></td>';
+                            html += '<td>' + p.student_id + '</td>';
+                            html += '<td>$' + parseFloat(p.amount).toFixed(2) + '</td>';
+                            html += '<td><span class="status-badge status-' + status + '">' + (p.status || 'Pending') + '</span></td>';
+                            html += '<td>' + new Date(p.created_date).toLocaleDateString() + '</td>';
+                            if (p.status === 'pending') {
+                                html += '<td><button class="btn btn-primary" onclick="openPaymentModal(\'' + p.incident_id + '\', ' + p.amount + ')">Pay Now</button></td>';
+                            } else {
+                                html += '<td>-</td>';
+                            }
+                            html += '</tr>';
+                        }
+                        tbody.innerHTML = html;
                     } else {
                         tbody.innerHTML = '<tr><td colspan="6" class="no-data">No payment requests</td></tr>';
                     }
@@ -189,10 +190,9 @@ UiPage({
 
         function openPaymentModal(incidentId, amount) {
             currentPaymentIncident = { id: incidentId, amount: amount };
-            document.getElementById('payment-details').innerHTML = \`
-                <p><strong>Incident:</strong> \${incidentId}</p>
-                <p><strong>Amount Due:</strong> <span style="font-size: 18px; font-weight: 700; color: #388e3c;">$\${parseFloat(amount).toFixed(2)}</span></p>
-            \`;
+            let html = '<p><strong>Incident:</strong> ' + incidentId + '</p>';
+            html += '<p><strong>Amount Due:</strong> <span style="font-size: 18px; font-weight: 700; color: #388e3c;">$' + parseFloat(amount).toFixed(2) + '</span></p>';
+            document.getElementById('payment-details').innerHTML = html;
             document.getElementById('payment-modal').classList.add('active');
         }
 

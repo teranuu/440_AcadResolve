@@ -10,7 +10,7 @@ UiPage({
     endpoint: 'x_1997678_acadreso_dashboard.do',
     description: 'Academic Resolve - Dashboard',
     category: 'general',
-    html: `
+    html: String.raw`
 <!DOCTYPE html>
 <html>
 <head>
@@ -190,20 +190,19 @@ UiPage({
 
                         // Display recent incidents
                         const recent = incidents.slice(0, 5);
-                        document.getElementById('recent-incidents').innerHTML = recent.map(inc => \`
-                            <tr>
-                                <td><strong>\${inc.number}</strong></td>
-                                <td>\${inc.student_id}</td>
-                                <td>\${inc.book_title}</td>
-                                <td>\${inc.damage_type}</td>
-                                <td>
-                                    <span class="status-badge status-\${(inc.state || 'open').toLowerCase()}">
-                                        \${inc.state}
-                                    </span>
-                                </td>
-                                <td>\${new Date(inc.created_on).toLocaleDateString()}</td>
-                            </tr>
-                        \`).join('');
+                        let html = '';
+                        for (let i = 0; i < recent.length; i++) {
+                            const inc = recent[i];
+                            const status = (inc.state || 'open').toLowerCase();
+                            html += '<tr><td><strong>' + inc.number + '</strong></td>';
+                            html += '<td>' + inc.student_id + '</td>';
+                            html += '<td>' + inc.book_title + '</td>';
+                            html += '<td>' + inc.damage_type + '</td>';
+                            html += '<td><span class="status-badge status-' + status + '">' + inc.state + '</span></td>';
+                            html += '<td>' + new Date(inc.created_on).toLocaleDateString() + '</td>';
+                            html += '</tr>';
+                        }
+                        document.getElementById('recent-incidents').innerHTML = html;
                     }
                 })
                 .catch(err => console.error('Error loading dashboard:', err));

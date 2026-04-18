@@ -10,7 +10,7 @@ UiPage({
     endpoint: 'x_1997678_acadreso_reports.do',
     description: 'Academic Resolve - Reports & Analytics',
     category: 'general',
-    html: `
+    html: String.raw`
 <!DOCTYPE html>
 <html>
 <head>
@@ -306,16 +306,20 @@ UiPage({
                         });
                         
                         const damageTable = document.getElementById('damage-table');
-                        damageTable.innerHTML = Object.entries(damageTypes).map(([type, count]) => \`
-                            <tr>
-                                <td>\${type}</td>
-                                <td>\${count}</td>
-                                <td>\${((count / incidents.length) * 100).toFixed(1)}%</td>
-                                <td>$\${(incidents
-                                    .filter(i => i.damage_type === type)
-                                    .reduce((sum, i) => sum + (parseFloat(i.calculated_fee) || 0), 0) / count).toFixed(2)}</td>
-                            </tr>
-                        \`).join('');
+                        const damageEntries = Object.entries(damageTypes);
+                        let html = '';
+                        for (let i = 0; i < damageEntries.length; i++) {
+                            const type = damageEntries[i][0];
+                            const count = damageEntries[i][1];
+                            const typeIncidents = incidents.filter(inc => inc.damage_type === type);
+                            const avgFee = (typeIncidents.reduce((sum, inc) => sum + (parseFloat(inc.calculated_fee) || 0), 0) / count).toFixed(2);
+                            const percentage = ((count / incidents.length) * 100).toFixed(1);
+                            html += '<tr><td>' + type + '</td>';
+                            html += '<td>' + count + '</td>';
+                            html += '<td>' + percentage + '%</td>';
+                            html += '<td>$' + avgFee + '</td></tr>';
+                        }
+                        damageTable.innerHTML = html;
                         
                         // Financial
                         const totalRevenue = incidents
