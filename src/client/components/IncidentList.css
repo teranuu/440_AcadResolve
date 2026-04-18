@@ -16,11 +16,13 @@
     text-align: left;
     padding: 12px 15px;
     font-weight: 600;
+    font-size: 14px;
 }
 
 .incident-list td {
     padding: 12px 15px;
     border-top: 1px solid #eee;
+    font-size: 14px;
 }
 
 .incident-list tr:nth-child(even) {
@@ -42,6 +44,7 @@
     border: none;
     border-radius: 3px;
     cursor: pointer;
+    font-size: 12px;
 }
 
 .edit-button {
@@ -68,36 +71,48 @@
     background-color: #f9f9f9;
     border-radius: 4px;
     color: #666;
+    font-size: 16px;
 }
 
 .state-badge,
-.impact-badge {
+.damage-badge {
     display: inline-block;
     padding: 3px 8px;
     border-radius: 12px;
     font-size: 12px;
     font-weight: 600;
+    text-transform: capitalize;
 }
 
-/* State colors */
-.state-new {
+/* State colors for book incidents */
+.state-open {
     background-color: #e3f2fd;
     color: #1976d2;
 }
 
-.state-in-progress {
-    background-color: #e8f5e9;
-    color: #388e3c;
-}
-
-.state-on-hold {
+.state-pending {
     background-color: #fff8e1;
     color: #ffa000;
 }
 
-.state-resolved {
+.state-approved {
+    background-color: #e8f5e9;
+    color: #388e3c;
+}
+
+.state-paid {
     background-color: #e0f7fa;
     color: #0097a7;
+}
+
+.state-replaced {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.state-disputed {
+    background-color: #ffebee;
+    color: #c62828;
 }
 
 .state-closed {
@@ -105,18 +120,40 @@
     color: #546e7a;
 }
 
-/* Impact colors */
-.impact-high {
-    background-color: #fff3e0;
-    color: #ef6c00;
+/* Damage type colors */
+.damage-lost {
+    background-color: #ffebee;
+    color: #c62828;
 }
 
-.impact-medium {
-    background-color: #fffde7;
-    color: #f9a825;
+.damage-damaged {
+    background-color: #fff8e1;
+    color: #ffa000;
 }
 
-.impact-low {
-    background-color: #f1f8e9;
-    color: #558b2f;
+.damage-water {
+    background-color: #e1f5fe;
+    color: #0277bd;
+}
+
+.damage-other {
+    background-color: #f5f5f5;
+    color: #616161;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .incident-list table {
+        font-size: 12px;
+    }
+    
+    .incident-list th,
+    .incident-list td {
+        padding: 8px 10px;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        gap: 4px;
+    }
 }

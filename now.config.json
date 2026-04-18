@@ -3,7 +3,7 @@
     "scopeId": "974280ca839c0b109bb1c710feaad308",
     "name": "AcadResolve",
     "licensing": {
-        "enforceLicense": "none"
+        "enforceLicense": "log"
     },
     "description": "Students want fair charges for lost/damaged items. Intake captures incident, photos, and purchase options; calculate fees; close on payment or replacement."
 }

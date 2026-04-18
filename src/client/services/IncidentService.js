@@ -4,7 +4,6 @@
  */
 export class IncidentService {
     constructor() {
-        this.baseUrl = '/api/now/x_1997678_acad_resolve'
         this.tableName = 'x_1997678_acadreso_book_incident'
     }
 
@@ -15,17 +14,18 @@ export class IncidentService {
      */
     async list(options = {}) {
         try {
-            let url = `${this.baseUrl}/listIncidents`
-            const params = new URLSearchParams()
+            const params = new URLSearchParams({
+                sysparm_display_value: 'all',
+                sysparm_limit: '100'
+            })
             
-            if (options.state) params.append('state', options.state)
-            if (options.student_id) params.append('student_id', options.student_id)
-            
-            if (params.toString()) {
-                url += `?${params.toString()}`
+            if (options.state) params.append('sysparm_query', `state=${options.state}`)
+            if (options.student_id) {
+                const query = params.get('sysparm_query') || ''
+                params.set('sysparm_query', query ? `${query}^student_id=${options.student_id}` : `student_id=${options.student_id}`)
             }
             
-            const response = await fetch(url, {
+            const response = await fetch(`/api/now/table/${this.tableName}?${params.toString()}`, {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',
@@ -34,11 +34,12 @@ export class IncidentService {
             })
 
             if (!response.ok) {
-                throw new Error(`HTTP error: ${response.status}`)
+                const errorData = await response.json()
+                throw new Error(errorData.error?.message || `HTTP error: ${response.status}`)
             }
 
             const data = await response.json()
-            return data.incidents || []
+            return data.result || []
         } catch (error) {
             console.error('Error listing incidents:', error)
             throw error
@@ -52,8 +53,7 @@ export class IncidentService {
      */
     async get(id) {
         try {
-            const url = `${this.baseUrl}/getIncident?id=${encodeURIComponent(id)}`
-            const response = await fetch(url, {
+            const response = await fetch(`/api/now/table/${this.tableName}/${id}?sysparm_display_value=all`, {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',
@@ -62,10 +62,12 @@ export class IncidentService {
             })
 
             if (!response.ok) {
-                throw new Error(`Incident not found: ${response.status}`)
+                const errorData = await response.json()
+                throw new Error(errorData.error?.message || `Incident not found: ${response.status}`)
             }
 
-            return await response.json()
+            const data = await response.json()
+            return data.result
         } catch (error) {
             console.error('Error fetching incident:', error)
             throw error
@@ -79,7 +81,7 @@ export class IncidentService {
      */
     async create(data) {
         try {
-            const response = await fetch(`${this.baseUrl}/createIncident`, {
+            const response = await fetch(`/api/now/table/${this.tableName}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -90,10 +92,12 @@ export class IncidentService {
             })
 
             if (!response.ok) {
-                throw new Error(`Failed to create incident: ${response.status}`)
+                const errorData = await response.json()
+                throw new Error(errorData.error?.message || `Failed to create incident: ${response.status}`)
             }
 
-            return await response.json()
+            const result = await response.json()
+            return result.result
         } catch (error) {
             console.error('Error creating incident:', error)
             throw error
@@ -108,17 +112,14 @@ export class IncidentService {
      */
     async update(id, data) {
         try {
-            const response = await fetch(`${this.baseUrl}/updateIncidentStatus`, {
-                method: 'POST',
+            const response = await fetch(`/api/now/table/${this.tableName}/${id}`, {
+                method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
                     'X-UserToken': window.g_ck,
                 },
-                body: JSON.stringify({
-                    incident_id: id,
-                    ...data
-                })
+                body: JSON.stringify(data)
             })
 
             if (!response.ok) {
@@ -126,7 +127,8 @@ export class IncidentService {
                 throw new Error(errorData.error?.message || `HTTP error ${response.status}`)
             }
 
-            return await response.json()
+            const result = await response.json()
+            return result.result
         } catch (error) {
             console.error('Error updating incident:', error)
             throw error
@@ -136,7 +138,7 @@ export class IncidentService {
     /**
      * Delete an incident (admin only)
      * @param {string} id - Incident ID
-     * @returns {Promise<Object>} Deletion result
+     * @returns {Promise<boolean>} Deletion success
      */
     async delete(id) {
         try {
@@ -156,128 +158,6 @@ export class IncidentService {
             return response.ok
         } catch (error) {
             console.error('Error deleting incident:', error)
-            throw error
-        }
-    }
-
-    /**
-     * Calculate fee for an incident
-     * @param {Object} params - Calculation parameters
-     * @returns {Promise<Object>} Fee calculation result
-     */
-    async calculateFee(params) {
-        try {
-            const response = await fetch(`${this.baseUrl}/calculateFee`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-UserToken': window.g_ck,
-                },
-                body: JSON.stringify(params)
-            })
-
-            if (!response.ok) {
-                throw new Error('Fee calculation failed')
-            }
-
-            return await response.json()
-        } catch (error) {
-            console.error('Error calculating fee:', error)
-            throw error
-        }
-    }
-
-    /**
-     * Initiate payment for an incident
-     * @param {string} incidentId - Incident ID
-     * @param {string} paymentMethod - Payment method
-     * @returns {Promise<Object>} Payment initiation result
-     */
-    async initiatePayment(incidentId, paymentMethod) {
-        try {
-            const response = await fetch(`${this.baseUrl}/initiatePayment`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-UserToken': window.g_ck,
-                },
-                body: JSON.stringify({
-                    incident_id: incidentId,
-                    payment_method: paymentMethod
-                })
-            })
-
-            if (!response.ok) {
-                throw new Error('Payment initiation failed')
-            }
-
-            return await response.json()
-        } catch (error) {
-            console.error('Error initiating payment:', error)
-            throw error
-        }
-    }
-
-    /**
-     * Submit for approval
-     * @param {string} incidentId - Incident ID
-     * @param {string} approverId - Approver user ID
-     * @returns {Promise<Object>} Submission result
-     */
-    async submitForApproval(incidentId, approverId) {
-        try {
-            const response = await fetch(`${this.baseUrl}/submitForApproval`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-UserToken': window.g_ck,
-                },
-                body: JSON.stringify({
-                    incident_id: incidentId,
-                    approver_id: approverId
-                })
-            })
-
-            if (!response.ok) {
-                throw new Error('Submission failed')
-            }
-
-            return await response.json()
-        } catch (error) {
-            console.error('Error submitting for approval:', error)
-            throw error
-        }
-    }
-
-    /**
-     * Get AI assessment for incident
-     * @param {string} incidentId - Incident ID
-     * @returns {Promise<Object>} AI assessment result
-     */
-    async assessWithAI(incidentId) {
-        try {
-            const response = await fetch(`${this.baseUrl}/assessDisputeWithAI`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-UserToken': window.g_ck,
-                },
-                body: JSON.stringify({
-                    incident_id: incidentId
-                })
-            })
-
-            if (!response.ok) {
-                throw new Error('AI assessment failed')
-            }
-
-            return await response.json()
-        } catch (error) {
-            console.error('Error getting AI assessment:', error)
             throw error
         }
     }

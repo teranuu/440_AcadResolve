@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { IncidentService } from './services/IncidentService'
-import IncidentList from './components/IncidentList'
-import IncidentForm from './components/IncidentForm'
+import { IncidentService } from './services/IncidentService.js'
+import IncidentList from './components/IncidentList.jsx'
+import IncidentForm from './components/IncidentForm.jsx'
 import './app.css'
 
 export default function App() {
