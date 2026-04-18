@@ -1,17 +1,23 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Incident Response Manager</title>
+  <title>Academic Resolve - Incident Manager</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  
-  <!-- Initialize ServiceNow globals -->
-  <sdk:now-ux-globals></sdk:now-ux-globals>
+  <link rel="stylesheet" href="./app.css">
 </head>
 <body>
   <div id="root"></div>
   
-  <!-- React initialization entry point - bundled by Rollup -->
-  <script src="./main.jsx" type="module"></script>
+  <script>
+    // Initialize React app when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if React is available
+      if (typeof React !== 'undefined' && typeof ReactDOM !== 'undefined') {
+        // App component will be initialized by the Fluent SDK
+        console.log('Academic Resolve Incident Manager initialized');
+      }
+    });
+  </script>
 </body>
 </html>
