@@ -1,11 +1,17 @@
 import '@servicenow/sdk/global'
 import { Table, StringColumn, DateColumn, DecimalColumn, ReferenceColumn, DateTimeColumn, RestApi, Role } from '@servicenow/sdk/core'
-import { assessDisputeWithAI, calculateFee, createIncident, getIncident, initiatePayment, listIncidents, submitForApproval, updateIncidentStatus } from "../server/incident-service"
 
-
-
-
-
+// Import server functions
+import { 
+    createIncident, 
+    getIncident, 
+    updateIncidentStatus, 
+    listIncidents, 
+    calculateFee, 
+    initiatePayment, 
+    submitForApproval, 
+    assessDisputeWithAI 
+} from '../server/incident-service.js'
 
 // Main book incident table
 export const x_1997678_acadreso_book_incident = Table({
@@ -187,7 +193,7 @@ export const x_1997678_acadreso_approval = Table({
     }
 })
 
-
+// Roles
 export const x_1997678_acadreso_admin = Role({
     $id: Now.ID['acadreso_admin_role'],
     name: 'x_1997678_acadreso.admin',
@@ -215,9 +221,7 @@ export const x_1997678_acadreso_librarian = Role({
     elevated_privilege: false
 })
 
-// 
-
-
+// REST API
 RestApi({
     $id: Now.ID['acadreso_api'],
     name: 'Academic Resolve API',
