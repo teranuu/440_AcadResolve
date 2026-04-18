@@ -5,6 +5,10 @@ declare global {
         namespace Internal {
             interface Keys extends KeysRegistry {
                 explicit: {
+                    academic_resolve_api: {
+                        table: 'sys_ws_definition'
+                        id: '4079580a8860450a8998521abc4e41d5'
+                    }
                     acadreso_api: {
                         table: 'sys_ws_definition'
                         id: '84390c78351a469caef50dfe08b5adbf'
@@ -13,6 +17,7 @@ declare global {
                     acadresolve_api: {
                         table: 'sys_ws_definition'
                         id: '87165a9073d444c6843cc6a0270299de'
+                        deleted: true
                     }
                     ai_assessment_route: {
                         table: 'sys_ws_operation'
@@ -34,33 +39,68 @@ declare global {
                         table: 'sys_ws_operation'
                         id: 'a9a804435e9d4161897f757e6798f8c1'
                     }
+                    fee_schedule_1: {
+                        table: 'x_1997678_acadreso_fee_schedule'
+                        id: '236a3d5b658c4f02b4fb78c900d99185'
+                    }
+                    fee_schedule_2: {
+                        table: 'x_1997678_acadreso_fee_schedule'
+                        id: '7b0a7d13e80345209bfd0d0e0ae34156'
+                    }
+                    fee_schedule_3: {
+                        table: 'x_1997678_acadreso_fee_schedule'
+                        id: 'b70da63cafdd45e19e4636dd1d27a589'
+                    }
+                    fee_schedule_4: {
+                        table: 'x_1997678_acadreso_fee_schedule'
+                        id: '4a3a936dbad549bbb02223bcc0b2d50d'
+                    }
+                    fee_schedule_5: {
+                        table: 'x_1997678_acadreso_fee_schedule'
+                        id: 'a131259bf7ba4efdafff008abab882e2'
+                    }
+                    fee_schedule_6: {
+                        table: 'x_1997678_acadreso_fee_schedule'
+                        id: '1c7073e87e154259b7ebc02be64237fe'
+                    }
+                    fee_schedule_7: {
+                        table: 'x_1997678_acadreso_fee_schedule'
+                        id: '2ec63865d13c42689586b1ffb4b825ca'
+                    }
                     fee_schedule_damaged_major: {
                         table: 'x_1997678_acadreso_fee_schedule'
                         id: '903036c06ba24b4196dd65e577bfd2a4'
+                        deleted: true
                     }
                     fee_schedule_damaged_minor: {
                         table: 'x_1997678_acadreso_fee_schedule'
                         id: '99133ddfded14b5d83b0679ff530cd8d'
+                        deleted: true
                     }
                     fee_schedule_damaged_moderate: {
                         table: 'x_1997678_acadreso_fee_schedule'
                         id: '6a5f5b6f618f499db75cac41442b070f'
+                        deleted: true
                     }
                     fee_schedule_lost_total: {
                         table: 'x_1997678_acadreso_fee_schedule'
                         id: '49dfdfa1895947b0a6b647e5bec67cbb'
+                        deleted: true
                     }
                     fee_schedule_torn_pages: {
                         table: 'x_1997678_acadreso_fee_schedule'
                         id: '21351c9b88f34e3b8881ecb4beb73361'
+                        deleted: true
                     }
                     fee_schedule_water_damage: {
                         table: 'x_1997678_acadreso_fee_schedule'
                         id: '21c6850bfd294185ac0b810c8ba7c55d'
+                        deleted: true
                     }
                     fee_schedule_writing: {
                         table: 'x_1997678_acadreso_fee_schedule'
                         id: '08795eca2df44f1c8e152f72c1e1b03d'
+                        deleted: true
                     }
                     get_incident_route: {
                         table: 'sys_ws_operation'
@@ -97,6 +137,11 @@ declare global {
                     update_incident_route: {
                         table: 'sys_ws_operation'
                         id: 'da449ba6cf314b439cd076cb437d966c'
+                        deleted: true
+                    }
+                    update_incident_status_route: {
+                        table: 'sys_ws_operation'
+                        id: '952ce9cb74524e5c8d27446a2e48328f'
                     }
                 }
                 composite: [
