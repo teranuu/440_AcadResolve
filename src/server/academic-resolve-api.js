@@ -27,12 +27,18 @@ export function getFeeSchedule(damageType, damageLevel) {
 // API: Create Incident
 export function createIncident(request, response) {
     try {
-        const data = request.body?.data || {}
+        // Parse request body - handle both direct object and wrapped data
+        let data = request.body?.data || request.body || {}
+        
+        // If body is a string, parse it as JSON
+        if (typeof data === 'string') {
+            data = JSON.parse(data)
+        }
         
         // Validate required fields
         if (!data.student_id || !data.book_title || !data.damage_type || !data.book_value) {
             response.setStatus(400)
-            response.setBody({ error: 'Missing required fields' })
+            response.setBody({ error: 'Missing required fields: student_id, book_title, damage_type, book_value' })
             return
         }
 
@@ -50,11 +56,16 @@ export function createIncident(request, response) {
         gr.state = 'open'
         
         const sysId = gr.insert()
+        
+        // Get the created record to return full details
+        const createdRecord = new GlideRecord('x_1997678_acadreso_book_incident')
+        createdRecord.get(sysId)
 
         response.setStatus(201)
         response.setBody({ 
+            sys_id: sysId,
             incident_id: sysId,
-            number: gr.number,
+            number: createdRecord.number,
             status: 'created'
         })
     } catch (err) {
@@ -66,7 +77,8 @@ export function createIncident(request, response) {
 // API: Get Incident
 export function getIncident(request, response) {
     try {
-        const incidentId = request.queryParams?.id
+        // Get incident ID from path parameter {id}
+        const incidentId = request.pathParams?.id || request.queryParams?.id
         if (!incidentId) {
             response.setStatus(400)
             response.setBody({ error: 'Incident ID required' })
@@ -82,17 +94,20 @@ export function getIncident(request, response) {
 
         response.setStatus(200)
         response.setBody({
+            sys_id: gr.sys_id,
             incident_id: gr.sys_id,
             number: gr.number,
             student_id: gr.student_id,
             book_title: gr.book_title,
+            book_isbn: gr.book_isbn,
             book_value: gr.book_value,
             damage_type: gr.damage_type,
             damage_level: gr.damage_level,
             calculated_fee: gr.calculated_fee,
             state: gr.state,
             description: gr.description,
-            incident_date: gr.incident_date
+            incident_date: gr.incident_date,
+            created_on: gr.created_on
         })
     } catch (err) {
         response.setStatus(500)
@@ -161,15 +176,19 @@ export function listIncidents(request, response) {
         while (gr.hasNext()) {
             const record = gr.next()
             incidents.push({
+                sys_id: record.sys_id,
                 incident_id: record.sys_id,
                 number: record.number,
                 student_id: record.student_id,
                 book_title: record.book_title,
+                book_isbn: record.book_isbn,
                 damage_type: record.damage_type,
                 damage_level: record.damage_level,
                 calculated_fee: record.calculated_fee,
                 state: record.state,
-                created_date: record.sys_created_on
+                created_on: record.sys_created_on,
+                description: record.description,
+                book_value: record.book_value
             })
         }
 
