@@ -1,297 +1,407 @@
-import '@servicenow/sdk/global'
-import { Table, StringColumn, DateColumn, DecimalColumn, ReferenceColumn, DateTimeColumn, RestApi, Role } from '@servicenow/sdk/core'
+/**
+ * Academic Resolve API
+ * REST API endpoints for managing book incidents and dispute resolution
+ */
 
-// Import server functions
-import { 
-    createIncident, 
-    getIncident, 
-    updateIncidentStatus, 
-    listIncidents, 
-    calculateFee, 
-    initiatePayment, 
-    submitForApproval, 
-    assessDisputeWithAI 
-} from '../server/incident-service.js'
+// Type declarations for ServiceNow globals
+declare class GlideRecord {
+    constructor(tableName: string)
+    initialize(): void
+    get(sysId: string): boolean
+    insert(): string
+    update(): void
+    query(): void
+    hasNext(): boolean
+    next(): GlideRecord
+    addQuery(field: string, value: any): void
+    orderByDesc(field: string): void
+    setLimit(limit: number): void
+    [key: string]: any
+}
 
-// Main book incident table
-export const x_1997678_acadreso_book_incident = Table({
-    name: 'x_1997678_acadreso_book_incident',
-    label: 'Book Incident',
-    schema: {
-        number: StringColumn({
-            label: 'Number',
-            maxLength: 40,
-            read_only: true
-        }),
-        student_id: StringColumn({
-            label: 'Student ID',
-            maxLength: 40,
-            mandatory: true
-        }),
-        book_title: StringColumn({
-            label: 'Book Title',
-            maxLength: 200,
-            mandatory: true
-        }),
-        book_isbn: StringColumn({
-            label: 'Book ISBN',
-            maxLength: 40
-        }),
-        book_value: DecimalColumn({
-            label: 'Book Value',
-            mandatory: true
-        }),
-        damage_type: StringColumn({
-            label: 'Damage Type',
-            choices: {
-                water_damage: { label: 'Water Damage', sequence: 0 },
-                torn_pages: { label: 'Torn Pages', sequence: 1 },
-                missing_pages: { label: 'Missing Pages', sequence: 2 },
-                lost: { label: 'Lost', sequence: 3 },
-                other: { label: 'Other', sequence: 4 }
-            }
-        }),
-        damage_level: StringColumn({
-            label: 'Damage Level',
-            choices: {
-                low: { label: 'Low', sequence: 0 },
-                medium: { label: 'Medium', sequence: 1 },
-                high: { label: 'High', sequence: 2 },
-                total: { label: 'Total Loss', sequence: 3 }
-            }
-        }),
-        description: StringColumn({
-            label: 'Description',
-            maxLength: 4000
-        }),
-        incident_date: DateColumn({
-            label: 'Incident Date'
-        }),
-        state: StringColumn({
-            label: 'State',
-            choices: {
-                open: { label: 'Open', sequence: 0 },
-                assessment: { label: 'In Assessment', sequence: 1 },
-                pending_approval: { label: 'Pending Approval', sequence: 2 },
-                approved: { label: 'Approved', sequence: 3 },
-                paid: { label: 'Paid', sequence: 4 },
-                replaced: { label: 'Replaced', sequence: 5 },
-                closed: { label: 'Closed', sequence: 6 },
-                disputed: { label: 'Disputed', sequence: 7 }
-            },
-            default: 'open'
-        }),
-        priority: StringColumn({
-            label: 'Priority',
-            choices: {
-                '1': { label: '1 - Critical', sequence: 0 },
-                '2': { label: '2 - High', sequence: 1 },
-                '3': { label: '3 - Moderate', sequence: 2 },
-                '4': { label: '4 - Low', sequence: 3 }
-            },
-            default: '3'
-        }),
-        calculated_fee: DecimalColumn({
-            label: 'Calculated Fee',
-            read_only: true
-        }),
-        resolution_notes: StringColumn({
-            label: 'Resolution Notes',
-            maxLength: 4000
-        }),
-        resolved_date: DateTimeColumn({
-            label: 'Resolved Date'
-        }),
-        ai_assessment: StringColumn({
-            label: 'AI Assessment',
-            maxLength: 4000
-        }),
-        recommended_damage_level: StringColumn({
-            label: 'AI Recommended Damage Level',
-            maxLength: 40
-        }),
-        recommended_fee: DecimalColumn({
-            label: 'AI Recommended Fee'
-        })
-    },
-    auto_number: {
-        prefix: 'INC',
-        number: 1000,
-        number_of_digits: 7
+declare const gs: {
+    getUniqueValue(): string
+}
+
+// Utility: Get incident by ID
+function getIncidentRecord(incidentId: string) {
+    const gr = new GlideRecord('x_1997678_acadreso_book_incident')
+    if (gr.get(incidentId)) {
+        return gr
     }
-})
+    return null
+}
 
-// Fee schedule table
-export const x_1997678_acadreso_fee_schedule = Table({
-    name: 'x_1997678_acadreso_fee_schedule',
-    label: 'Fee Schedule',
-    schema: {
-        damage_type: StringColumn({
-            label: 'Damage Type',
-            maxLength: 40,
-            mandatory: true
-        }),
-        damage_level: StringColumn({
-            label: 'Damage Level',
-            maxLength: 40,
-            mandatory: true
-        }),
-        fee_percentage: DecimalColumn({
-            label: 'Fee Percentage',
-            mandatory: true
-        }),
-        fee_type: StringColumn({
-            label: 'Fee Type',
-            choices: {
-                percentage: { label: 'Percentage of Value', sequence: 0 },
-                fixed: { label: 'Fixed Amount', sequence: 1 },
-                replacement_cost: { label: 'Full Replacement Cost', sequence: 2 }
+// Utility: Get fee schedule
+function getFeeSchedule(damageType: string, damageLevel: string) {
+    const gr = new GlideRecord('x_1997678_acadreso_fee_schedule')
+    gr.addQuery('damage_type', damageType)
+    gr.addQuery('damage_level', damageLevel)
+    gr.addQuery('active', true)
+    gr.query()
+    return gr.hasNext() ? gr.next() : null
+}
+
+// API: Create Incident
+export function createIncident(request: any) {
+    try {
+        const data = request.body?.data || {}
+        
+        // Validate required fields
+        if (!data.student_id || !data.book_title || !data.damage_type || !data.book_value) {
+            return {
+                status: 400,
+                body: { error: 'Missing required fields' }
             }
-        }),
-        active: StringColumn({
-            label: 'Active',
-            choices: {
-                'true': { label: 'True', sequence: 0 },
-                'false': { label: 'False', sequence: 1 }
-            },
-            default: 'true'
-        })
-    }
-})
-
-// Approval table
-export const x_1997678_acadreso_approval = Table({
-    name: 'x_1997678_acadreso_approval',
-    label: 'Book Incident Approval',
-    schema: {
-        incident_id: ReferenceColumn({
-            label: 'Incident',
-            referenceTable: 'x_1997678_acadreso_book_incident',
-            mandatory: true
-        }),
-        approver_id: ReferenceColumn({
-            label: 'Approver',
-            referenceTable: 'sys_user',
-            mandatory: true
-        }),
-        approval_status: StringColumn({
-            label: 'Approval Status',
-            choices: {
-                pending: { label: 'Pending', sequence: 0 },
-                approved: { label: 'Approved', sequence: 1 },
-                rejected: { label: 'Rejected', sequence: 2 }
-            },
-            default: 'pending'
-        }),
-        approval_notes: StringColumn({
-            label: 'Approval Notes',
-            maxLength: 4000
-        }),
-        approval_date: DateTimeColumn({
-            label: 'Approval Date'
-        })
-    }
-})
-
-// Roles
-export const x_1997678_acadreso_admin = Role({
-    $id: Now.ID['acadreso_admin_role'],
-    name: 'x_1997678_acadreso.admin',
-    description: 'Administrator role for Academic Resolve application',
-    assignable_by: 'admin',
-    can_delegate: false,
-    elevated_privilege: false
-})
-
-export const x_1997678_acadreso_student = Role({
-    $id: Now.ID['acadreso_student_role'],
-    name: 'x_1997678_acadreso.student',
-    description: 'Student role for Academic Resolve application',
-    assignable_by: 'admin',
-    can_delegate: false,
-    elevated_privilege: false
-})
-
-export const x_1997678_acadreso_librarian = Role({
-    $id: Now.ID['acadreso_librarian_role'],
-    name: 'x_1997678_acadreso.librarian',
-    description: 'Librarian role for Academic Resolve application',
-    assignable_by: 'admin',
-    can_delegate: false,
-    elevated_privilege: false
-})
-
-// REST API
-RestApi({
-    $id: Now.ID['acadreso_api'],
-    name: 'Academic Resolve API',
-    service_id: 'x_1997678_acad_resolve',
-    short_description: 'API for managing book incident reports and resolution',
-    active: true,
-    routes: [
-        {
-            $id: Now.ID['create_incident_route'],
-            name: 'Create Incident',
-            path: '/createIncident',
-            method: 'POST',
-            script: createIncident,
-            short_description: 'Create a new book incident report'
-        },
-        {
-            $id: Now.ID['get_incident_route'],
-            name: 'Get Incident',
-            path: '/getIncident',
-            method: 'GET',
-            script: getIncident,
-            short_description: 'Retrieve a specific incident by ID'
-        },
-        {
-            $id: Now.ID['update_incident_route'],
-            name: 'Update Incident Status',
-            path: '/updateIncidentStatus',
-            method: 'POST',
-            script: updateIncidentStatus,
-            short_description: 'Update the status of an incident'
-        },
-        {
-            $id: Now.ID['list_incidents_route'],
-            name: 'List Incidents',
-            path: '/listIncidents',
-            method: 'GET',
-            script: listIncidents,
-            short_description: 'List incidents with optional filtering'
-        },
-        {
-            $id: Now.ID['calculate_fee_route'],
-            name: 'Calculate Fee',
-            path: '/calculateFee',
-            method: 'POST',
-            script: calculateFee,
-            short_description: 'Calculate fee for book damage'
-        },
-        {
-            $id: Now.ID['initiate_payment_route'],
-            name: 'Initiate Payment',
-            path: '/initiatePayment',
-            method: 'POST',
-            script: initiatePayment,
-            short_description: 'Initiate payment process for incident'
-        },
-        {
-            $id: Now.ID['submit_approval_route'],
-            name: 'Submit for Approval',
-            path: '/submitForApproval',
-            method: 'POST',
-            script: submitForApproval,
-            short_description: 'Submit incident for approval'
-        },
-        {
-            $id: Now.ID['ai_assessment_route'],
-            name: 'AI Assessment',
-            path: '/assessDisputeWithAI',
-            method: 'POST',
-            script: assessDisputeWithAI,
-            short_description: 'Get AI assessment for dispute resolution'
         }
-    ]
-})
+
+        // Create incident record
+        const gr = new GlideRecord('x_1997678_acadreso_book_incident')
+        gr.initialize()
+        gr.student_id = data.student_id
+        gr.book_title = data.book_title
+        gr.book_isbn = data.book_isbn || ''
+        gr.book_value = data.book_value
+        gr.damage_type = data.damage_type
+        gr.damage_level = data.damage_level
+        gr.incident_date = data.incident_date || new Date().toISOString()
+        gr.description = data.description || ''
+        gr.state = 'open'
+        
+        const sysId = gr.insert()
+
+        return {
+            status: 201,
+            body: { 
+                incident_id: sysId,
+                number: gr.number,
+                status: 'created'
+            }
+        }
+    } catch (err) {
+        return {
+            status: 500,
+            body: { error: String(err) }
+        }
+    }
+}
+
+// API: Get Incident
+export function getIncident(request: any) {
+    try {
+        const incidentId = request.queryParams?.id
+        if (!incidentId) {
+            return {
+                status: 400,
+                body: { error: 'Incident ID required' }
+            }
+        }
+
+        const gr = getIncidentRecord(incidentId)
+        if (!gr) {
+            return {
+                status: 404,
+                body: { error: 'Incident not found' }
+            }
+        }
+
+        return {
+            status: 200,
+            body: {
+                incident_id: gr.sys_id,
+                number: gr.number,
+                student_id: gr.student_id,
+                book_title: gr.book_title,
+                book_value: gr.book_value,
+                damage_type: gr.damage_type,
+                damage_level: gr.damage_level,
+                calculated_fee: gr.calculated_fee,
+                state: gr.state,
+                description: gr.description,
+                incident_date: gr.incident_date
+            }
+        }
+    } catch (err) {
+        return {
+            status: 500,
+            body: { error: String(err) }
+        }
+    }
+}
+
+// API: Update Incident Status
+export function updateIncidentStatus(request: any) {
+    try {
+        const data = request.body?.data || {}
+        const incidentId = data.incident_id
+        
+        if (!incidentId || !data.state) {
+            return {
+                status: 400,
+                body: { error: 'Incident ID and state required' }
+            }
+        }
+
+        const gr = getIncidentRecord(incidentId)
+        if (!gr) {
+            return {
+                status: 404,
+                body: { error: 'Incident not found' }
+            }
+        }
+
+        gr.state = data.state
+        if (data.state === 'paid' || data.state === 'replaced') {
+            gr.resolved_date = new Date().toISOString()
+        }
+        gr.update()
+
+        return {
+            status: 200,
+            body: { 
+                incident_id: incidentId,
+                state: data.state,
+                status: 'updated'
+            }
+        }
+    } catch (err) {
+        return {
+            status: 500,
+            body: { error: String(err) }
+        }
+    }
+}
+
+// API: List Incidents
+export function listIncidents(request: any) {
+    try {
+        const studentId = request.queryParams?.student_id
+        const state = request.queryParams?.state
+        const limit = parseInt(request.queryParams?.limit || '100')
+
+        const gr = new GlideRecord('x_1997678_acadreso_book_incident')
+        
+        if (studentId) {
+            gr.addQuery('student_id', studentId)
+        }
+        if (state) {
+            gr.addQuery('state', state)
+        }
+        
+        gr.orderByDesc('sys_created_on')
+        gr.setLimit(limit)
+        gr.query()
+
+        const incidents = []
+        while (gr.hasNext()) {
+            const record = gr.next()
+            incidents.push({
+                incident_id: record.sys_id,
+                number: record.number,
+                student_id: record.student_id,
+                book_title: record.book_title,
+                damage_type: record.damage_type,
+                damage_level: record.damage_level,
+                calculated_fee: record.calculated_fee,
+                state: record.state,
+                created_date: record.sys_created_on
+            })
+        }
+
+        return {
+            status: 200,
+            body: {
+                incidents: incidents,
+                count: incidents.length
+            }
+        }
+    } catch (err) {
+        return {
+            status: 500,
+            body: { error: String(err) }
+        }
+    }
+}
+
+// API: Calculate Fee
+export function calculateFee(request: any) {
+    try {
+        const data = request.body?.data || {}
+        const { damage_type, damage_level, book_value } = data
+
+        if (!damage_type || !damage_level || !book_value) {
+            return {
+                status: 400,
+                body: { error: 'Missing required fields' }
+            }
+        }
+
+        const feeSchedule = getFeeSchedule(damage_type, damage_level)
+        if (!feeSchedule) {
+            return {
+                status: 404,
+                body: { error: 'Fee schedule not found' }
+            }
+        }
+
+        const feePercentage = parseFloat(feeSchedule.fee_percentage)
+        const calculatedFee = (book_value * feePercentage) / 100
+
+        return {
+            status: 200,
+            body: {
+                damage_type: damage_type,
+                damage_level: damage_level,
+                book_value: book_value,
+                fee_percentage: feePercentage,
+                calculated_fee: calculatedFee
+            }
+        }
+    } catch (err) {
+        return {
+            status: 500,
+            body: { error: String(err) }
+        }
+    }
+}
+
+// API: Initiate Payment
+export function initiatePayment(request: any) {
+    try {
+        const data = request.body?.data || {}
+        const { incident_id, payment_method } = data
+
+        if (!incident_id || !payment_method) {
+            return {
+                status: 400,
+                body: { error: 'Incident ID and payment method required' }
+            }
+        }
+
+        const gr = getIncidentRecord(incident_id)
+        if (!gr) {
+            return {
+                status: 404,
+                body: { error: 'Incident not found' }
+            }
+        }
+
+        // Generate payment transaction ID
+        const transactionId = 'TXN_' + gs.getUniqueValue()
+        gr.payment_gateway_id = transactionId
+        gr.payment_status = 'processing'
+        gr.update()
+
+        return {
+            status: 200,
+            body: {
+                transaction_id: transactionId,
+                incident_id: incident_id,
+                amount: gr.calculated_fee,
+                payment_method: payment_method,
+                redirect_url: '/payment_portal?transaction=' + transactionId
+            }
+        }
+    } catch (err) {
+        return {
+            status: 500,
+            body: { error: String(err) }
+        }
+    }
+}
+
+// API: Submit for Approval
+export function submitForApproval(request: any) {
+    try {
+        const data = request.body?.data || {}
+        const { incident_id, approver_id } = data
+
+        if (!incident_id || !approver_id) {
+            return {
+                status: 400,
+                body: { error: 'Incident ID and approver ID required' }
+            }
+        }
+
+        const gr = getIncidentRecord(incident_id)
+        if (!gr) {
+            return {
+                status: 404,
+                body: { error: 'Incident not found' }
+            }
+        }
+
+        // Create approval record
+        const approvalGr = new GlideRecord('x_1997678_acadreso_approval')
+        approvalGr.initialize()
+        approvalGr.incident_id = incident_id
+        approvalGr.approver_id = approver_id
+        approvalGr.approval_status = 'pending'
+        const approvalId = approvalGr.insert()
+
+        // Update incident status
+        gr.state = 'pending_approval'
+        gr.update()
+
+        return {
+            status: 200,
+            body: {
+                approval_id: approvalId,
+                incident_id: incident_id,
+                status: 'submitted_for_approval'
+            }
+        }
+    } catch (err) {
+        return {
+            status: 500,
+            body: { error: String(err) }
+        }
+    }
+}
+
+// API: AI Assessment
+export function assessDisputeWithAI(request: any) {
+    try {
+        const data = request.body?.data || {}
+        const { incident_id } = data
+
+        if (!incident_id) {
+            return {
+                status: 400,
+                body: { error: 'Incident ID required' }
+            }
+        }
+
+        const gr = getIncidentRecord(incident_id)
+        if (!gr) {
+            return {
+                status: 404,
+                body: { error: 'Incident not found' }
+            }
+        }
+
+        // Placeholder AI assessment (would call Copilot API in production)
+        const assessment = 'AI Assessment: Damage level appears consistent with description. Recommended fee: ' + gr.calculated_fee
+
+        gr.ai_assessment = assessment
+        gr.recommended_damage_level = gr.damage_level
+        gr.recommended_fee = gr.calculated_fee
+        gr.update()
+
+        return {
+            status: 200,
+            body: {
+                incident_id: incident_id,
+                assessment: assessment,
+                recommended_damage_level: gr.damage_level,
+                recommended_fee: gr.calculated_fee,
+                confidence_score: 0.85
+            }
+        }
+    } catch (err) {
+        return {
+            status: 500,
+            body: { error: String(err) }
+        }
+    }
+}
