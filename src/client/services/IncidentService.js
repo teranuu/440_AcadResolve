@@ -5,7 +5,7 @@
 export class IncidentService {
     constructor() {
         this.baseUrl = '/api/now/x_1997678_acad_resolve'
-        this.tableName = 'x_1997678_acad_resolve_book_incident'
+        this.tableName = 'x_1997678_acadreso_book_incident'
     }
 
     /**
@@ -122,7 +122,8 @@ export class IncidentService {
             })
 
             if (!response.ok) {
-                throw new Error(`Failed to update incident: ${response.status}`)
+                const errorData = await response.json()
+                throw new Error(errorData.error?.message || `HTTP error ${response.status}`)
             }
 
             return await response.json()
@@ -148,10 +149,11 @@ export class IncidentService {
             })
 
             if (!response.ok) {
-                throw new Error(`Failed to delete incident: ${response.status}`)
+                const errorData = await response.json()
+                throw new Error(errorData.error?.message || `HTTP error ${response.status}`)
             }
 
-            return await response.json()
+            return response.ok
         } catch (error) {
             console.error('Error deleting incident:', error)
             throw error
@@ -276,42 +278,6 @@ export class IncidentService {
             return await response.json()
         } catch (error) {
             console.error('Error getting AI assessment:', error)
-            throw error
-        }
-    }
-            })
-
-            if (!response.ok) {
-                const errorData = await response.json()
-                throw new Error(errorData.error?.message || `HTTP error ${response.status}`)
-            }
-
-            return response.json()
-        } catch (error) {
-            console.error(`Error updating incident ${sysId}:`, error)
-            throw error
-        }
-    }
-
-    // Delete an incident
-    async delete(sysId) {
-        try {
-            const response = await fetch(`/api/now/table/${this.tableName}/${sysId}`, {
-                method: 'DELETE',
-                headers: {
-                    Accept: 'application/json',
-                    'X-UserToken': window.g_ck,
-                },
-            })
-
-            if (!response.ok) {
-                const errorData = await response.json()
-                throw new Error(errorData.error?.message || `HTTP error ${response.status}`)
-            }
-
-            return response.ok
-        } catch (error) {
-            console.error(`Error deleting incident ${sysId}:`, error)
             throw error
         }
     }
