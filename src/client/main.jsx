@@ -14,6 +14,9 @@ function initializeApp() {
                 React.createElement(App)
             )
         )
+        console.log('Academic Resolve app initialized successfully')
+    } else {
+        console.error('Root container not found')
     }
 }
 
