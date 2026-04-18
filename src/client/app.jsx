@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react'
-import './app.css'
+import React, { useState, useEffect } from 'react';
+import './app.css';
 
 // Simple test component first
-export default function App() {
-    const [message, setMessage] = useState('Loading...')
+function App() {
+    const [message, setMessage] = useState('Loading...');
 
     useEffect(() => {
         // Test if the app loads
-        setMessage('Academic Resolve - Incident Manager Ready!')
-    }, [])
+        setMessage('Academic Resolve - Incident Manager Ready!');
+    }, []);
 
     return React.createElement('div', { className: 'incident-app' },
         React.createElement('header', { className: 'app-header' },
@@ -21,5 +21,7 @@ export default function App() {
                 onClick: () => setMessage('React is working!')
             }, 'Test Button')
         )
-    )
+    );
 }
+
+export default App;
