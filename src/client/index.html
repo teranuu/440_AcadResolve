@@ -11,7 +11,20 @@
 <body>
   <div id="root"></div>
   
-  <!-- React entry point -->
-  <script src="./main.jsx" type="module"></script>
+  <!-- React initialization - inline module that gets bundled by Rollup -->
+  <script type="module">
+    import React from 'react';
+    import ReactDOM from 'react-dom/client';
+    import App from './app.jsx';
+
+    const rootElement = document.getElementById('root');
+    if (rootElement) {
+      ReactDOM.createRoot(rootElement).render(
+        React.createElement(React.StrictMode, null,
+          React.createElement(App)
+        )
+      );
+    }
+  </script>
 </body>
 </html>

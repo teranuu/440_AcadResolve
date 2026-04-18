@@ -185,6 +185,7 @@ declare global {
                     {
                         table: 'sys_ux_lib_asset'
                         id: '098e3e6d01b44bbbb4966811a6bbbd7a'
+                        deleted: true
                         key: {
                             name: 'x_1997678_acadreso/main.js.map'
                         }
@@ -259,6 +260,7 @@ declare global {
                     {
                         table: 'sys_ux_lib_asset'
                         id: '1720cd46ba844df7a61a241fb795eee8'
+                        deleted: true
                         key: {
                             name: 'x_1997678_acadreso/main'
                         }
