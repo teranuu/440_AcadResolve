@@ -1,5 +1,11 @@
 import '@servicenow/sdk/global'
-import { Table, StringColumn, DecimalColumn, ChoiceColumn, BooleanColumn } from '@servicenow/sdk/core'
+
+// Type declarations for fluent table builders
+declare function Table(config: any): any
+declare function StringColumn(config: any): any
+declare function DecimalColumn(config: any): any
+declare function ChoiceColumn(config: any): any
+declare function BooleanColumn(config: any): any
 
 // Fee Schedule Table - defines fees based on damage type and level
 export const x_1997678_acadreso_fee_schedule = Table({

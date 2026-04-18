@@ -1,5 +1,11 @@
 import '@servicenow/sdk/global'
-import { Table, StringColumn, DecimalColumn, DateTimeColumn, ChoiceColumn } from '@servicenow/sdk/core'
+
+// Type declarations for fluent table builders
+declare function Table(config: any): any
+declare function StringColumn(config: any): any
+declare function DecimalColumn(config: any): any
+declare function DateTimeColumn(config: any): any
+declare function ChoiceColumn(config: any): any
 
 // Book Incident Table - tracks damaged or lost books
 export const x_1997678_acadreso_book_incident = Table({

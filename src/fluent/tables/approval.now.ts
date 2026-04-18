@@ -1,5 +1,11 @@
 import '@servicenow/sdk/global'
-import { Table, StringColumn, DateTimeColumn, ChoiceColumn, ReferenceColumn } from '@servicenow/sdk/core'
+
+// Type declarations for fluent table builders
+declare function Table(config: any): any
+declare function StringColumn(config: any): any
+declare function DateTimeColumn(config: any): any
+declare function ChoiceColumn(config: any): any
+declare function ReferenceColumn(config: any): any
 
 // Approval Table - tracks approval requests for incidents
 export const x_1997678_acadreso_approval = Table({
