@@ -1,3 +1,4 @@
+/* Academic Resolve - Simple Test CSS */
 .incident-app {
     max-width: 1200px;
     margin: 0 auto;
@@ -6,57 +7,46 @@
 }
 
 .app-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #ddd;
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #2196f3;
 }
 
 .app-header h1 {
-    margin: 0;
     color: #2c3e50;
+    margin: 0 0 10px 0;
 }
 
-.create-button {
-    background-color: #4caf50;
+.content {
+    text-align: center;
+}
+
+.content p {
+    font-size: 18px;
+    color: #666;
+    margin: 20px 0;
+}
+
+button {
+    background-color: #2196f3;
     color: white;
     border: none;
-    padding: 10px 15px;
-    border-radius: 4px;
+    padding: 15px 30px;
+    font-size: 16px;
+    border-radius: 5px;
     cursor: pointer;
-    font-weight: bold;
+    transition: background-color 0.3s;
 }
 
-.create-button:hover {
-    background-color: #45a049;
+button:hover {
+    background-color: #0b7dda;
 }
 
+/* Loading state */
 .loading {
     text-align: center;
     padding: 40px;
     font-size: 18px;
     color: #666;
-}
-
-.error-message {
-    background-color: #ffebee;
-    color: #d32f2f;
-    padding: 15px;
-    margin-bottom: 20px;
-    border-radius: 4px;
-    border-left: 4px solid #d32f2f;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.error-message button {
-    background: none;
-    border: none;
-    color: #d32f2f;
-    cursor: pointer;
-    font-weight: bold;
-    text-decoration: underline;
 }
