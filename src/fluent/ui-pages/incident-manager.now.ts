@@ -153,11 +153,8 @@ UiPage({
             error.style.display = 'none';
             content.style.display = 'none';
 
-            // Fetch incidents
-            const user = (new GlideUser && new GlideUser()) || {};
-            const studentId = user.getID ? user.getID() : null;
-
-            fetch('api/x_1997678_acadreso/incidents?limit=100')
+            // Fetch incidents from API
+            fetch('/api/acadresolve/incidents?limit=100')
                 .then(r => r.json())
                 .then(data => {
                     loading.style.display = 'none';
