@@ -6,6 +6,6 @@ UiPage({
     endpoint: 'x_1997678_acadreso_incident_manager.do',
     description: 'Incident Response Manager UI Page',
     category: 'general',
-    html: Now.include('../../static-content/index.html'),
+    html: Now.include('../../client/index.html'),
     direct: true,
 })

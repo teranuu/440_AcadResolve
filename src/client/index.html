@@ -11,33 +11,7 @@
 <body>
   <div id="root"></div>
   
-  <!-- Entry point for Rollup bundler - will be transformed during build -->
-  <script type="module">
-    // This block will be bundled with dependencies by servicenowFrontEndPlugins
-    import React from 'react';
-    import ReactDOM from 'react-dom/client';
-    import App from './app.jsx';
-
-    function initializeApp() {
-      const rootElement = document.getElementById('root');
-      if (rootElement) {
-        const root = ReactDOM.createRoot(rootElement);
-        root.render(
-          React.createElement(
-            React.StrictMode,
-            null,
-            React.createElement(App)
-          )
-        );
-      }
-    }
-
-    // Initialize when DOM is ready
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initializeApp);
-    } else {
-      initializeApp();
-    }
-  </script>
+  <!-- React initialization entry point - bundled by Rollup -->
+  <script src="./main.jsx" type="module"></script>
 </body>
 </html>
